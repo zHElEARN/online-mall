@@ -1,5 +1,6 @@
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -15,6 +16,7 @@ export default function RootLayout({
           enableSystem={true}
         >
           {children}
+          <Toaster richColors={true} expand={true} />
         </ThemeProvider>
       </body>
     </html>
