@@ -31,7 +31,7 @@ const breadcrumbConfig: BreadcrumbConfig = {
     href: "/manage/orders",
   },
   settings: {
-    label: "系统设置",
+    label: "商家设置",
     href: "/manage/settings",
   },
 };
