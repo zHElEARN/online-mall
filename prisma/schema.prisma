@@ -6,3 +6,204 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  /// 买家
+  BUYER
+  /// 卖家
+  SELLER
+}
+
+enum OrderStatus {
+  /// 待支付
+  PENDING
+  /// 已支付
+  PAID
+  /// 已发货
+  SHIPPED
+  /// 已完成
+  COMPLETED
+  /// 已取消
+  CANCELED
+}
+
+model User {
+  /// 用户ID
+  id           String   @id @default(uuid())
+  /// 用户名
+  username     String   @unique
+  /// 邮箱
+  email        String?  @unique
+  /// 手机号
+  phone        String?  @unique
+  /// 密码
+  passwordHash String
+  /// 角色
+  role         Role
+  /// 头像
+  avatar       String?
+  /// 真实姓名
+  realName     String?
+  /// 创建时间
+  createdAt    DateTime @default(now())
+  /// 更新时间
+  updatedAt    DateTime @updatedAt
+
+  // 卖家相关
+  /// 卖家商品列表
+  products Product[] @relation("SellerProducts")
+
+  // 买家相关
+  /// 买家订单列表
+  orders    Order[]   @relation("BuyerOrders")
+  /// 买家地址列表
+  addresses Address[] @relation("UserAddresses")
+  /// 买家购物车列表
+  cart      Cart[]    @relation("UserCart")
+  /// 买家评论列表
+  reviews   Review[]  @relation("UserReviews")
+}
+
+model Product {
+  /// 商品ID
+  id          String   @id @default(uuid())
+  /// 商品名称
+  name        String
+  /// 商品描述
+  description String?
+  /// 商品价格
+  price       Float
+  /// 商品图片 (JSON string of image URLs)
+  images      String
+  /// 商品库存
+  stock       Int
+  /// 是否上架
+  isActive    Boolean  @default(true)
+  /// 商品分类
+  category    String?
+  /// 销量
+  salesCount  Int      @default(0)
+  /// 创建时间
+  createdAt   DateTime @default(now())
+  /// 更新时间
+  updatedAt   DateTime @updatedAt
+
+  /// 卖家ID
+  sellerId String
+  /// 卖家信息
+  seller   User   @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  /// 商品订单列表
+  orders    Order[]  @relation("ProductOrders")
+  /// 商品购物车列表
+  cartItems Cart[]   @relation("ProductCart")
+  /// 商品评论列表
+  reviews   Review[] @relation("ProductReviews")
+}
+
+model Order {
+  /// 订单ID
+  id         String      @id @default(uuid())
+  /// 数量
+  quantity   Int
+  /// 总价
+  totalPrice Float
+  /// 订单状态
+  status     OrderStatus @default(PENDING)
+  /// 备注
+  note       String?
+  /// 创建时间
+  createdAt  DateTime    @default(now())
+  /// 更新时间
+  updatedAt  DateTime    @updatedAt
+
+  /// 买家ID
+  buyerId   String
+  /// 买家信息
+  buyer     User    @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  /// 商品ID
+  productId String
+  /// 商品信息
+  product   Product @relation("ProductOrders", fields: [productId], references: [id], onDelete: Cascade)
+  /// 收货地址ID
+  addressId String
+  /// 收货地址信息
+  address   Address @relation("AddressOrders", fields: [addressId], references: [id], onDelete: Cascade)
+}
+
+model Address {
+  /// 地址ID
+  id           String   @id @default(uuid())
+  /// 收货人姓名
+  receiverName String
+  /// 收货人手机号
+  phone        String
+  /// 收货人省份
+  province     String
+  /// 收货人城市
+  city         String
+  /// 收货人区县
+  district     String
+  /// 收货人详细地址
+  detail       String
+  /// 是否为默认地址
+  isDefault    Boolean  @default(false)
+  /// 创建时间
+  createdAt    DateTime @default(now())
+  /// 更新时间
+  updatedAt    DateTime @updatedAt
+
+  /// 用户ID
+  userId String
+  /// 用户信息
+  user   User   @relation("UserAddresses", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 买家订单列表
+  orders Order[] @relation("AddressOrders")
+}
+
+model Cart {
+  /// 购物车ID
+  id        String   @id @default(uuid())
+  /// 商品数量
+  quantity  Int
+  /// 创建时间
+  createdAt DateTime @default(now())
+  /// 更新时间
+  updatedAt DateTime @updatedAt
+
+  /// 用户ID
+  userId    String
+  /// 用户信息
+  user      User    @relation("UserCart", fields: [userId], references: [id], onDelete: Cascade)
+  /// 商品ID
+  productId String
+  /// 商品信息
+  product   Product @relation("ProductCart", fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Review {
+  /// 评论ID
+  id        String   @id @default(uuid())
+  /// 评分 (1-5)
+  rating    Int
+  /// 评论内容
+  comment   String?
+  /// 创建时间
+  createdAt DateTime @default(now())
+  /// 更新时间
+  updatedAt DateTime @updatedAt
+
+  /// 用户ID
+  userId    String
+  /// 用户信息
+  user      User    @relation("UserReviews", fields: [userId], references: [id], onDelete: Cascade)
+  /// 商品ID
+  productId String
+  /// 商品信息
+  product   Product @relation("ProductReviews", fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
