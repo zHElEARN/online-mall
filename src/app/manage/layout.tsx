@@ -1,9 +1,4 @@
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from "@/components/ui/breadcrumb";
+import { NavBreadcrumb } from "@/app/manage/nav-breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
@@ -25,15 +20,9 @@ export default function ManageLayout({
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">商家管理</BreadcrumbLink>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
+          <NavBreadcrumb />
         </header>
-        <main>{children}</main>
+        <main className="p-4 pt-0">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
