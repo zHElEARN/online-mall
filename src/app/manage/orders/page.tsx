@@ -4,11 +4,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -17,12 +27,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { MoreHorizontal, Package, Truck } from "lucide-react";
+import { Eye, MoreHorizontal, Package, Truck, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getSellerOrders, updateOrderStatus } from "./actions";
+import { toast } from "sonner";
+import { cancelOrder, getSellerOrders, updateOrderStatus } from "./actions";
 import { OrdersPageSkeleton } from "./skeleton";
 
-// 订单状态映射
 const orderStatusMap = {
   PENDING: {
     label: "待支付",
@@ -51,16 +62,32 @@ const orderStatusMap = {
   },
 };
 
-// 状态更新操作
 const statusActions = {
-  PAID: [{ status: "SHIPPED", label: "发货", icon: Truck }],
-  SHIPPED: [{ status: "COMPLETED", label: "完成订单", icon: Package }],
+  PENDING: [
+    { type: "cancel", status: "CANCELED", label: "取消订单", icon: X, variant: "destructive" as const },
+  ],
+  PAID: [
+    { type: "update", status: "SHIPPED", label: "发货", icon: Truck, variant: "default" as const },
+  ],
+  SHIPPED: [],
+  COMPLETED: [],
+  CANCELED: [],
 };
 
 function OrdersList() {
+  const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shipDialog, setShipDialog] = useState<{
+    open: boolean;
+    orderId: string;
+    trackingNumber: string;
+  }>({
+    open: false,
+    orderId: "",
+    trackingNumber: "",
+  });
 
   const loadOrders = async () => {
     try {
@@ -85,13 +112,68 @@ function OrdersList() {
     loadOrders();
   }, []);
 
-  const handleUpdateStatus = async (orderId: string, status: string) => {
+  const handleUpdateStatus = async (orderId: string, status: string, trackingNumber?: string) => {
     try {
-      await updateOrderStatus(orderId, status);
-      await loadOrders();
+      const result = await updateOrderStatus(orderId, status, trackingNumber);
+      if (result.success) {
+        toast.success("订单状态更新成功");
+        await loadOrders();
+      } else {
+        toast.error(result.error || "更新订单状态失败");
+      }
     } catch (err) {
       console.error("更新订单状态失败:", err);
+      toast.error("更新订单状态失败");
     }
+  };
+
+  const handleShipOrder = (orderId: string) => {
+    setShipDialog({
+      open: true,
+      orderId,
+      trackingNumber: "",
+    });
+  };
+
+  const handleConfirmShip = async () => {
+    if (!shipDialog.trackingNumber.trim()) {
+      toast.error("请输入快递单号");
+      return;
+    }
+
+    await handleUpdateStatus(shipDialog.orderId, "SHIPPED", shipDialog.trackingNumber);
+    setShipDialog({
+      open: false,
+      orderId: "",
+      trackingNumber: "",
+    });
+  };
+
+  const handleCancelShip = () => {
+    setShipDialog({
+      open: false,
+      orderId: "",
+      trackingNumber: "",
+    });
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      const result = await cancelOrder(orderId);
+      if (result.success) {
+        toast.success("订单取消成功");
+        await loadOrders();
+      } else {
+        toast.error(result.error || "取消订单失败");
+      }
+    } catch (err) {
+      console.error("取消订单失败:", err);
+      toast.error("取消订单失败");
+    }
+  };
+
+  const handleViewOrder = (orderId: string) => {
+    router.push(`/manage/orders/${orderId}`);
   };
 
   if (loading) {
@@ -216,31 +298,41 @@ function OrdersList() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      {actions.length > 0 ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">打开菜单</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {actions.map((action) => (
-                              <DropdownMenuItem
-                                key={action.status}
-                                onClick={() => {
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">打开菜单</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleViewOrder(order.id)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            查看订单
+                          </DropdownMenuItem>
+                          
+                          {actions.map((action) => (
+                            <DropdownMenuItem
+                              key={action.status}
+                              className={action.variant === "destructive" ? "text-destructive" : ""}
+                              onClick={() => {
+                                if (action.type === "cancel") {
+                                  handleCancelOrder(order.id);
+                                } else if (action.status === "SHIPPED") {
+                                  handleShipOrder(order.id);
+                                } else {
                                   handleUpdateStatus(order.id, action.status);
-                                }}
-                              >
-                                <action.icon className="mr-2 h-4 w-4" />
-                                {action.label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : (
-                        <div className="text-muted-foreground text-sm">-</div>
-                      )}
+                                }
+                              }}
+                            >
+                              <action.icon className="mr-2 h-4 w-4" />
+                              {action.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );
@@ -249,6 +341,51 @@ function OrdersList() {
           </Table>
         </div>
       </CardContent>
+      
+      <Dialog open={shipDialog.open} onOpenChange={(open) => !open && handleCancelShip()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>确认发货</DialogTitle>
+            <DialogDescription>
+              请输入快递单号以确认发货，发货后买家将能够追踪包裹物流信息。
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tracking-number">快递单号</Label>
+              <Input
+                id="tracking-number"
+                placeholder="请输入快递单号"
+                value={shipDialog.trackingNumber}
+                onChange={(e) =>
+                  setShipDialog((prev) => ({
+                    ...prev,
+                    trackingNumber: e.target.value,
+                  }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleConfirmShip();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelShip}>
+              取消
+            </Button>
+            <Button 
+              onClick={handleConfirmShip}
+              disabled={!shipDialog.trackingNumber.trim()}
+            >
+              确认发货
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

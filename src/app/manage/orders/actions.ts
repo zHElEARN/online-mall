@@ -49,7 +49,6 @@ export const getSellerOrders = async (): Promise<GetSellerOrdersResult> => {
       return { success: false, error: userResult.error || "用户未登录" };
     }
 
-    // 检查用户是否为卖家
     if (userResult.user.role !== "SELLER") {
       return { success: false, error: "只有卖家可以查看订单" };
     }
@@ -109,7 +108,8 @@ interface UpdateOrderStatusResult {
 
 export const updateOrderStatus = async (
   orderId: string,
-  status: string
+  status: string,
+  trackingNumber?: string
 ): Promise<UpdateOrderStatusResult> => {
   try {
     const userResult = await getCurrentUser();
@@ -118,12 +118,10 @@ export const updateOrderStatus = async (
       return { success: false, error: userResult.error || "用户未登录" };
     }
 
-    // 检查用户是否为卖家
     if (userResult.user.role !== "SELLER") {
       return { success: false, error: "只有卖家可以更新订单状态" };
     }
 
-    // 验证订单是否属于当前卖家
     const order = await prisma.order.findFirst({
       where: {
         id: orderId,
@@ -137,18 +135,80 @@ export const updateOrderStatus = async (
       return { success: false, error: "订单不存在或无权限" };
     }
 
+    // 商家不能将订单状态更新为已完成
+    if (status === "COMPLETED") {
+      return { success: false, error: "商家不能手动完成订单" };
+    }
+
+    if (status === "SHIPPED" && !trackingNumber) {
+      return { success: false, error: "发货时必须提供快递单号" };
+    }
+
+    const updateData: any = {
+      status: status as any,
+    };
+
+    if (trackingNumber) {
+      updateData.trackingNumber = trackingNumber;
+    }
+
     await prisma.order.update({
       where: {
         id: orderId,
       },
-      data: {
-        status: status as any,
-      },
+      data: updateData,
     });
 
     return { success: true };
   } catch (error) {
     console.error("更新订单状态失败:", error);
     return { success: false, error: "更新订单状态失败" };
+  }
+};
+
+export const cancelOrder = async (
+  orderId: string
+): Promise<UpdateOrderStatusResult> => {
+  try {
+    const userResult = await getCurrentUser();
+
+    if (!userResult.success || !userResult.user) {
+      return { success: false, error: userResult.error || "用户未登录" };
+    }
+
+    if (userResult.user.role !== "SELLER") {
+      return { success: false, error: "只有卖家可以取消订单" };
+    }
+
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        product: {
+          sellerId: userResult.user.id,
+        },
+      },
+    });
+
+    if (!order) {
+      return { success: false, error: "订单不存在或无权限" };
+    }
+
+    if (order.status !== "PENDING") {
+      return { success: false, error: "只有待支付状态的订单可以被取消" };
+    }
+
+    await prisma.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        status: "CANCELED",
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("取消订单失败:", error);
+    return { success: false, error: "取消订单失败" };
   }
 };

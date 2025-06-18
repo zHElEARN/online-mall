@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from "@prisma/client";
+import { PrismaClient, Role, OrderStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -180,41 +180,88 @@ async function main() {
   const allProducts = await prisma.product.findMany();
   const iphone = allProducts.find((p) => p.name === "iPhone 15 Pro");
   const macbook = allProducts.find((p) => p.name === "MacBook Air M2");
+  const airpods = allProducts.find((p) => p.name === "AirPods Pro 2");
+  const nike = allProducts.find((p) => p.name === "Nike Air Max 270");
+  const airPurifier = allProducts.find((p) => p.name === "小米空气净化器4");
+  const tshirt = allProducts.find((p) => p.name === "优衣库基础款T恤");
 
-  // 创建订单
-  if (iphone) {
-    await prisma.order.create({
-      data: {
-        quantity: 1,
-        totalPrice: iphone.price,
-        status: "PAID",
-        note: "请尽快发货，谢谢！",
-        buyerId: buyer.id,
-        productId: iphone.id,
-        addressId: address1.id,
-      },
-    });
-  }
+  // 创建不同状态的订单
+  const ordersData = [
+    // 待支付订单
+    {
+      product: iphone,
+      quantity: 1,
+      status: OrderStatus.PENDING,
+      note: "请确认商品颜色为深空黑色",
+      address: address1,
+    },
+    // 已支付订单
+    {
+      product: macbook,
+      quantity: 1,
+      status: OrderStatus.PAID,
+      note: "请尽快发货，谢谢！",
+      address: address2,
+    },
+    // 已发货订单
+    {
+      product: airpods,
+      quantity: 2,
+      status: OrderStatus.SHIPPED,
+      note: "送货时请提前电话联系",
+      trackingNumber: "SF1234567890",
+      address: address1,
+    },
+    // 已完成订单
+    {
+      product: nike,
+      quantity: 1,
+      status: OrderStatus.COMPLETED,
+      note: "尺码41码，谢谢",
+      trackingNumber: "YT9876543210",
+      address: address1,
+    },
+    // 已取消订单
+    {
+      product: airPurifier,
+      quantity: 1,
+      status: OrderStatus.CANCELED,
+      note: "临时取消，抱歉",
+      address: address2,
+    },
+    // 更多已完成订单
+    {
+      product: tshirt,
+      quantity: 3,
+      status: OrderStatus.COMPLETED,
+      note: "颜色：白色、黑色、灰色各一件",
+      trackingNumber: "ZTO5555666777",
+      address: address1,
+    },
+  ];
 
-  if (macbook) {
-    await prisma.order.create({
-      data: {
-        quantity: 1,
-        totalPrice: macbook.price,
-        status: "PENDING",
-        note: "送货时请提前电话联系",
-        buyerId: buyer.id,
-        productId: macbook.id,
-        addressId: address2.id,
-      },
-    });
+  for (const orderData of ordersData) {
+    if (orderData.product) {
+      await prisma.order.create({
+        data: {
+          quantity: orderData.quantity,
+          totalPrice: orderData.product.price * orderData.quantity,
+          status: orderData.status,
+          note: orderData.note,
+          trackingNumber: orderData.trackingNumber || null,
+          buyerId: buyer.id,
+          productId: orderData.product.id,
+          addressId: orderData.address.id,
+        },
+      });
+    }
   }
 
   console.log("数据填充完成!");
   console.log(`创建用户: ${buyer.username} (买家), ${seller.username} (卖家)`);
   console.log(`创建商品: ${products.length} 个`);
   console.log("创建地址: 2 个");
-  console.log("创建订单: 2 个");
+  console.log(`创建订单: ${ordersData.length} 个 (涵盖所有订单状态)`);
   console.log("默认密码: 123456");
 }
 

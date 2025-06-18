@@ -103,19 +103,21 @@ model Product {
 
 model Order {
   /// 订单ID
-  id         String      @id @default(uuid())
+  id             String      @id @default(uuid())
   /// 数量
-  quantity   Int
+  quantity       Int
   /// 总价
-  totalPrice Float
+  totalPrice     Float
   /// 订单状态
-  status     OrderStatus @default(PENDING)
+  status         OrderStatus @default(PENDING)
   /// 备注
-  note       String?
+  note           String?
+  /// 快递单号
+  trackingNumber String?
   /// 创建时间
-  createdAt  DateTime    @default(now())
+  createdAt      DateTime    @default(now())
   /// 更新时间
-  updatedAt  DateTime    @updatedAt
+  updatedAt      DateTime    @updatedAt
 
   /// 买家ID
   buyerId   String
