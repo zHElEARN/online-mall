@@ -34,7 +34,7 @@ function ProductCard({ product }: { product: Product }) {
   const mainImage = hasImage ? images[0] : null;
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 p-0">
+    <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 p-0 h-[420px] flex flex-col">
       <div className="relative overflow-hidden">
         {hasImage ? (
           <Image
@@ -53,50 +53,52 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         )}
       </div>
-      <CardContent className="p-4 pb-0">
-        <h3
-          className="font-semibold text-lg mb-2 overflow-hidden text-ellipsis"
-          style={{
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-          }}
-        >
-          {product.name}
-        </h3>
-        {product.description && (
-          <p
-            className="text-muted-foreground text-sm mb-2 overflow-hidden text-ellipsis"
+      <CardContent className="p-4 pb-0 flex-1 flex flex-col justify-between">
+        <div>
+          <h3
+            className="font-semibold text-lg mb-2 overflow-hidden text-ellipsis h-14"
             style={{
               display: "-webkit-box",
               WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical",
             }}
           >
-            {product.description}
+            {product.name}
+          </h3>
+          <p
+            className="text-muted-foreground text-sm mb-2 overflow-hidden text-ellipsis h-10"
+            style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+            }}
+          >
+            {product.description || "暂无商品描述"}
           </p>
-        )}
-        <div className="flex items-center gap-1 mb-2">
-          <Star className="w-4 h-4 text-yellow-400 fill-current" />
-          <span className="text-sm text-muted-foreground">
-            {product._count.reviews > 0 ? "4.5" : "暂无评分"}
-          </span>
-          <span className="text-sm text-muted-foreground/60">
-            ({product._count.reviews} 评价)
-          </span>
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-2xl font-bold text-destructive">
-              ¥{product.price.toFixed(2)}
+        <div>
+          <div className="flex items-center gap-1 mb-2">
+            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+            <span className="text-sm text-muted-foreground">
+              {product._count.reviews > 0 ? "4.5" : "暂无评分"}
+            </span>
+            <span className="text-sm text-muted-foreground/60">
+              ({product._count.reviews} 评价)
             </span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            已售 {product.salesCount}
-          </span>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-2xl font-bold text-destructive">
+                ¥{product.price.toFixed(2)}
+              </span>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              已售 {product.salesCount}
+            </span>
+          </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-4 pt-0 mt-auto">
         <Button className="w-full">立即购买</Button>
       </CardFooter>
     </Card>
@@ -139,20 +141,24 @@ export default function Home() {
         </p>
 
         <div className="max-w-2xl mx-auto">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-            <Input
-              type="text"
-              placeholder="搜索您想要的商品..."
-              className="pl-10 pr-4 py-3 text-lg h-12 rounded-full border-2 focus:border-primary transition-colors"
-            />
-            <Button
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-6 h-8"
-              size="sm"
-            >
-              搜索
-            </Button>
-          </div>
+          <form action="/search" method="GET">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Input
+                name="q"
+                type="text"
+                placeholder="搜索您想要的商品..."
+                className="pl-10 pr-20 py-3 text-lg h-12 rounded-full border-2 focus:border-primary transition-colors"
+              />
+              <Button
+                type="submit"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 rounded-full px-6 h-8"
+                size="sm"
+              >
+                搜索
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
 
