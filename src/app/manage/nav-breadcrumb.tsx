@@ -26,6 +26,12 @@ const breadcrumbConfig: BreadcrumbConfig = {
     label: "商品管理",
     href: "/manage/products",
   },
+  create: {
+    label: "创建商品",
+  },
+  edit: {
+    label: "编辑商品",
+  },
   orders: {
     label: "订单管理",
     href: "/manage/orders",
@@ -36,37 +42,62 @@ const breadcrumbConfig: BreadcrumbConfig = {
   },
 };
 
+interface BreadcrumbItemData {
+  path: string;
+  label: string;
+  href?: string;
+  isLast: boolean;
+}
+
 export function NavBreadcrumb() {
   const pathname = usePathname();
 
   const pathSegments = pathname.split("/").filter(Boolean);
 
-  const breadcrumbItems = pathSegments
-    .map((segment, index) => {
-      const path = "/" + pathSegments.slice(0, index + 1).join("/");
-      const config = breadcrumbConfig[segment];
+  const breadcrumbItems: BreadcrumbItemData[] = [];
 
-      if (!config) {
-        return null;
+  pathSegments.forEach((segment, index) => {
+    const path = "/" + pathSegments.slice(0, index + 1).join("/");
+    const config = breadcrumbConfig[segment];
+    const isLast = index === pathSegments.length - 1;
+
+    if (config) {
+      breadcrumbItems.push({
+        path,
+        label: config.label,
+        href: config.href || path,
+        isLast,
+      });
+    } else {
+      // 处理动态路由（如商品ID）
+      if (
+        index > 0 &&
+        pathSegments[index - 1] === "products" &&
+        pathSegments[0] === "manage"
+      ) {
+        // 这是一个商品ID
+        breadcrumbItems.push({
+          path,
+          label: "商品详情",
+          isLast,
+        });
       }
+    }
+  });
 
-      const isLast = index === pathSegments.length - 1;
+  const breadcrumbElements = breadcrumbItems.map((item) => (
+    <BreadcrumbItem key={item.path}>
+      {item.isLast ? (
+        <BreadcrumbPage>{item.label}</BreadcrumbPage>
+      ) : (
+        <BreadcrumbLink href={item.href || item.path}>
+          {item.label}
+        </BreadcrumbLink>
+      )}
+    </BreadcrumbItem>
+  ));
 
-      return (
-        <BreadcrumbItem key={path}>
-          {isLast ? (
-            <BreadcrumbPage>{config.label}</BreadcrumbPage>
-          ) : (
-            <BreadcrumbLink href={config.href || path}>
-              {config.label}
-            </BreadcrumbLink>
-          )}
-        </BreadcrumbItem>
-      );
-    })
-    .filter(Boolean);
-
-  const breadcrumbWithSeparators = breadcrumbItems.reduce<React.ReactNode[]>(
+  const breadcrumbWithSeparators = breadcrumbElements.reduce<React.ReactNode[]>(
     (acc, item, index) => {
       if (index > 0) {
         acc.push(

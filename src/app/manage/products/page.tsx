@@ -27,12 +27,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Edit, Eye, EyeOff, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { deleteProduct, getUserProducts } from "./actions";
+import { deleteProduct, getUserProducts, toggleProductStatus } from "./actions";
 import { ProductsPageSkeleton } from "./skeleton";
 
 interface Product {
@@ -52,9 +52,11 @@ interface Product {
 function ProductsList({
   products,
   onDelete,
+  onToggleStatus,
 }: {
   products: Product[];
   onDelete: (productId: string, productName: string) => void;
+  onToggleStatus: (productId: string, currentStatus: boolean) => void;
 }) {
   const router = useRouter();
 
@@ -77,6 +79,10 @@ function ProductsList({
   }
 
   const handleEdit = (productId: string) => {
+    router.push(`/manage/products/${productId}/edit`);
+  };
+
+  const handleView = (productId: string) => {
     router.push(`/manage/products/${productId}`);
   };
 
@@ -95,13 +101,17 @@ function ProductsList({
               <TableHead>分类</TableHead>
               <TableHead>销量</TableHead>
               <TableHead>状态</TableHead>
-              <TableHead>创建时间</TableHead>
+              <TableHead>更新时间</TableHead>
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.map((product) => (
-              <TableRow key={product.id}>
+              <TableRow
+                key={product.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleView(product.id)}
+              >
                 <TableCell>
                   <div className="font-medium">{product.name}</div>
                   {product.description && (
@@ -133,23 +143,62 @@ function ProductsList({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(product.createdAt).toLocaleDateString("zh-CN")}
+                  {new Date(product.updatedAt).toLocaleDateString("zh-CN")}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(product.id)}>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleView(product.id);
+                        }}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        查看
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(product.id);
+                        }}
+                      >
                         <Edit className="mr-2 h-4 w-4" />
                         编辑
                       </DropdownMenuItem>
                       <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleStatus(product.id, product.isActive);
+                        }}
+                      >
+                        {product.isActive ? (
+                          <>
+                            <EyeOff className="mr-2 h-4 w-4" />
+                            下架
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="mr-2 h-4 w-4" />
+                            上架
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
                         variant="destructive"
-                        onClick={() => onDelete(product.id, product.name)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(product.id, product.name);
+                        }}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         删除
@@ -172,6 +221,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     productId: string;
@@ -202,6 +252,37 @@ export default function ProductsPage() {
   useEffect(() => {
     loadProducts();
   }, []);
+
+  const handleToggleStatus = async (
+    productId: string,
+    currentStatus: boolean
+  ) => {
+    setToggling(productId);
+    try {
+      const result = await toggleProductStatus(productId);
+
+      if (result.success && result.product) {
+        toast.success(`商品已${!currentStatus ? "上架" : "下架"}`);
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId
+              ? {
+                  ...p,
+                  isActive: result.product!.isActive,
+                  updatedAt: result.product!.updatedAt,
+                }
+              : p
+          )
+        );
+      } else {
+        toast.error(result.error || "操作失败");
+      }
+    } catch (error) {
+      toast.error("操作失败，请重试");
+    } finally {
+      setToggling(null);
+    }
+  };
 
   const handleDelete = async (productId: string, productName: string) => {
     setDeleteDialog({
@@ -282,7 +363,11 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      <ProductsList products={products} onDelete={handleDelete} />
+      <ProductsList
+        products={products}
+        onDelete={handleDelete}
+        onToggleStatus={handleToggleStatus}
+      />
 
       <AlertDialog
         open={deleteDialog.open}

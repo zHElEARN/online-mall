@@ -80,3 +80,40 @@ export const deleteProduct = async (
     return { success: false, error: "删除商品失败" };
   }
 };
+
+export const toggleProductStatus = async (
+  productId: string
+): Promise<{ success: boolean; error?: string; product?: Product }> => {
+  try {
+    const userResult = await getCurrentUser();
+
+    if (!userResult.success || !userResult.user) {
+      return { success: false, error: userResult.error || "用户未登录" };
+    }
+
+    const product = await prisma.product.findFirst({
+      where: {
+        id: productId,
+        sellerId: userResult.user.id,
+      },
+    });
+
+    if (!product) {
+      return { success: false, error: "商品不存在或无权限操作" };
+    }
+
+    const updatedProduct = await prisma.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        isActive: !product.isActive,
+      },
+    });
+
+    return { success: true, product: updatedProduct };
+  } catch (error) {
+    console.error("切换商品状态失败:", error);
+    return { success: false, error: "切换商品状态失败" };
+  }
+};
