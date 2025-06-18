@@ -1,6 +1,24 @@
+"use client";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -9,26 +27,36 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { Suspense } from "react";
-import { getUserProducts } from "./actions";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { deleteProduct, getUserProducts } from "./actions";
 import { ProductsPageSkeleton } from "./skeleton";
 
-async function ProductsList() {
-  const result = await getUserProducts();
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  images: string;
+  stock: number;
+  isActive: boolean;
+  category: string | null;
+  salesCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
-  if (!result.success) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-destructive">错误: {result.error}</div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const products = result.products || [];
+function ProductsList({
+  products,
+  onDelete,
+}: {
+  products: Product[];
+  onDelete: (productId: string, productName: string) => void;
+}) {
+  const router = useRouter();
 
   if (products.length === 0) {
     return (
@@ -47,6 +75,10 @@ async function ProductsList() {
       </Card>
     );
   }
+
+  const handleEdit = (productId: string) => {
+    router.push(`/manage/products/${productId}`);
+  };
 
   return (
     <Card>
@@ -104,14 +136,26 @@ async function ProductsList() {
                   {new Date(product.createdAt).toLocaleDateString("zh-CN")}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(product.id)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        编辑
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => onDelete(product.id, product.name)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        删除
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
@@ -123,6 +167,109 @@ async function ProductsList() {
 }
 
 export default function ProductsPage() {
+  const router = useRouter();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    productId: string;
+    productName: string;
+  }>({
+    open: false,
+    productId: "",
+    productName: "",
+  });
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const result = await getUserProducts();
+      if (result.success) {
+        setProducts(result.products || []);
+        setError(null);
+      } else {
+        setError(result.error || "获取商品列表失败");
+      }
+    } catch (err) {
+      setError("获取商品列表失败");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const handleDelete = async (productId: string, productName: string) => {
+    setDeleteDialog({
+      open: true,
+      productId,
+      productName,
+    });
+  };
+
+  const confirmDelete = async () => {
+    const { productId, productName } = deleteDialog;
+    setDeleteDialog({ open: false, productId: "", productName: "" });
+
+    setDeleting(productId);
+    try {
+      const result = await deleteProduct(productId);
+
+      if (result.success) {
+        toast.success("商品删除成功");
+        setProducts((prev) => prev.filter((p) => p.id !== productId));
+      } else {
+        toast.error(result.error || "删除失败");
+      }
+    } catch (error) {
+      toast.error("删除失败，请重试");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">我的商品</h1>
+          <Button asChild>
+            <Link href="/manage/products/create">
+              <Plus className="mr-2 h-4 w-4" />
+              添加商品
+            </Link>
+          </Button>
+        </div>
+        <ProductsPageSkeleton />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">我的商品</h1>
+          <Button asChild>
+            <Link href="/manage/products/create">
+              <Plus className="mr-2 h-4 w-4" />
+              添加商品
+            </Link>
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-destructive">错误: {error}</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
@@ -135,9 +282,32 @@ export default function ProductsPage() {
         </Button>
       </div>
 
-      <Suspense fallback={<ProductsPageSkeleton />}>
-        <ProductsList />
-      </Suspense>
+      <ProductsList products={products} onDelete={handleDelete} />
+
+      <AlertDialog
+        open={deleteDialog.open}
+        onOpenChange={(open) =>
+          setDeleteDialog({ open, productId: "", productName: "" })
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除商品 "{deleteDialog.productName}" 吗？此操作不可撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

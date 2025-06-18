@@ -46,3 +46,37 @@ export const getUserProducts = async (): Promise<GetUserProductsResult> => {
     return { success: false, error: "获取商品列表失败" };
   }
 };
+
+export const deleteProduct = async (
+  productId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const userResult = await getCurrentUser();
+
+    if (!userResult.success || !userResult.user) {
+      return { success: false, error: userResult.error || "用户未登录" };
+    }
+
+    const product = await prisma.product.findFirst({
+      where: {
+        id: productId,
+        sellerId: userResult.user.id,
+      },
+    });
+
+    if (!product) {
+      return { success: false, error: "商品不存在或无权限删除" };
+    }
+
+    await prisma.product.delete({
+      where: {
+        id: productId,
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("删除商品失败:", error);
+    return { success: false, error: "删除商品失败" };
+  }
+};
