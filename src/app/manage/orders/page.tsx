@@ -64,10 +64,22 @@ const orderStatusMap = {
 
 const statusActions = {
   PENDING: [
-    { type: "cancel", status: "CANCELED", label: "取消订单", icon: X, variant: "destructive" as const },
+    {
+      type: "cancel",
+      status: "CANCELED",
+      label: "取消订单",
+      icon: X,
+      variant: "destructive" as const,
+    },
   ],
   PAID: [
-    { type: "update", status: "SHIPPED", label: "发货", icon: Truck, variant: "default" as const },
+    {
+      type: "update",
+      status: "SHIPPED",
+      label: "发货",
+      icon: Truck,
+      variant: "default" as const,
+    },
   ],
   SHIPPED: [],
   COMPLETED: [],
@@ -112,7 +124,11 @@ function OrdersList() {
     loadOrders();
   }, []);
 
-  const handleUpdateStatus = async (orderId: string, status: string, trackingNumber?: string) => {
+  const handleUpdateStatus = async (
+    orderId: string,
+    status: string,
+    trackingNumber?: string
+  ) => {
     try {
       const result = await updateOrderStatus(orderId, status, trackingNumber);
       if (result.success) {
@@ -141,7 +157,11 @@ function OrdersList() {
       return;
     }
 
-    await handleUpdateStatus(shipDialog.orderId, "SHIPPED", shipDialog.trackingNumber);
+    await handleUpdateStatus(
+      shipDialog.orderId,
+      "SHIPPED",
+      shipDialog.trackingNumber
+    );
     setShipDialog({
       open: false,
       orderId: "",
@@ -312,11 +332,15 @@ function OrdersList() {
                             <Eye className="mr-2 h-4 w-4" />
                             查看订单
                           </DropdownMenuItem>
-                          
+
                           {actions.map((action) => (
                             <DropdownMenuItem
                               key={action.status}
-                              className={action.variant === "destructive" ? "text-destructive" : ""}
+                              className={
+                                action.variant === "destructive"
+                                  ? "text-destructive"
+                                  : ""
+                              }
                               onClick={() => {
                                 if (action.type === "cancel") {
                                   handleCancelOrder(order.id);
@@ -341,8 +365,11 @@ function OrdersList() {
           </Table>
         </div>
       </CardContent>
-      
-      <Dialog open={shipDialog.open} onOpenChange={(open) => !open && handleCancelShip()}>
+
+      <Dialog
+        open={shipDialog.open}
+        onOpenChange={(open) => !open && handleCancelShip()}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>确认发货</DialogTitle>
@@ -350,7 +377,7 @@ function OrdersList() {
               请输入快递单号以确认发货，发货后买家将能够追踪包裹物流信息。
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="tracking-number">快递单号</Label>
@@ -372,12 +399,12 @@ function OrdersList() {
               />
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelShip}>
               取消
             </Button>
-            <Button 
+            <Button
               onClick={handleConfirmShip}
               disabled={!shipDialog.trackingNumber.trim()}
             >
