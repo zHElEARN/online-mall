@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { BackButton } from "@/components/back-button";
@@ -33,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import type { OrderStatus } from "@prisma/client";
 import { cancelOrder, updateOrderStatus } from "../actions";
 import { getOrder } from "./actions";
 import { OrderDetailSkeleton } from "./skeleton";
@@ -159,11 +160,7 @@ export default function OrderPage({
     trackingNumber: "",
   });
 
-  useEffect(() => {
-    loadOrder();
-  }, [id]);
-
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     try {
       const result = await getOrder(id);
       if (result.success && result.order) {
@@ -179,7 +176,11 @@ export default function OrderPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, router]);
+
+  useEffect(() => {
+    loadOrder();
+  }, [loadOrder]);
 
   const handleUpdateStatus = async (
     orderId: string,
@@ -187,7 +188,11 @@ export default function OrderPage({
     trackingNumber?: string
   ) => {
     try {
-      const result = await updateOrderStatus(orderId, status, trackingNumber);
+      const result = await updateOrderStatus(
+        orderId,
+        status as OrderStatus,
+        trackingNumber
+      );
       if (result.success) {
         toast.success("订单状态更新成功");
         await loadOrder();

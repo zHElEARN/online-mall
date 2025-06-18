@@ -10,11 +10,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { login } from "./actions";
-import Link from "next/link";
 
 export default function LoginPage() {
   const [pending, setPending] = useState(false);
@@ -34,7 +34,7 @@ export default function LoginPage() {
       } else {
         toast.error(result.error || "登录失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("登录失败，请稍后再试");
     } finally {
       setPending(false);

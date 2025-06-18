@@ -240,9 +240,10 @@ async function main() {
     },
   ];
 
+  const createdOrders = [];
   for (const orderData of ordersData) {
     if (orderData.product) {
-      await prisma.order.create({
+      const order = await prisma.order.create({
         data: {
           quantity: orderData.quantity,
           totalPrice: orderData.product.price * orderData.quantity,
@@ -254,7 +255,32 @@ async function main() {
           addressId: orderData.address.id,
         },
       });
+      createdOrders.push({ order, productData: orderData.product });
     }
+  }
+
+  // 为已完成的订单创建评价
+  if (nike) {
+    await prisma.review.create({
+      data: {
+        rating: 5,
+        comment: "非常满意！鞋子质量很好，穿着很舒适，物流也很快。5星好评！",
+        userId: buyer.id,
+        productId: nike.id,
+      },
+    });
+  }
+
+  if (tshirt) {
+    await prisma.review.create({
+      data: {
+        rating: 4,
+        comment:
+          "T恤质量不错，纯棉材质很舒服，就是颜色比图片稍微深一点，但整体还是很满意的。",
+        userId: buyer.id,
+        productId: tshirt.id,
+      },
+    });
   }
 
   console.log("数据填充完成!");
@@ -262,6 +288,7 @@ async function main() {
   console.log(`创建商品: ${products.length} 个`);
   console.log("创建地址: 2 个");
   console.log(`创建订单: ${ordersData.length} 个 (涵盖所有订单状态)`);
+  console.log("创建评价: 2 个 (针对已完成订单)");
   console.log("默认密码: 123456");
 }
 

@@ -318,65 +318,98 @@ function ProductDetailContent({
                 </TableHeader>
                 <TableBody>
                   {orders.map((order) => (
-                    <TableRow key={order.id}>
+                    <TableRow
+                      key={order.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
                       <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="w-6 h-6">
-                              <AvatarImage src={order.buyer.avatar || ""} />
-                              <AvatarFallback className="text-xs">
-                                {order.buyer.username.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">
-                              {order.buyer.username}
-                            </span>
+                        <Link
+                          href={`/manage/orders/${order.id}`}
+                          className="block"
+                        >
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="w-6 h-6">
+                                <AvatarImage src={order.buyer.avatar || ""} />
+                                <AvatarFallback className="text-xs">
+                                  {order.buyer.username.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">
+                                {order.buyer.username}
+                              </span>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {order.buyer.email}
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground">
-                            {order.buyer.email}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1 max-w-xs">
-                          <div className="font-medium">
-                            {order.address.receiverName}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {order.address.phone}
-                          </div>
-                          <div className="text-sm text-muted-foreground line-clamp-2">
-                            {order.address.province} {order.address.city}{" "}
-                            {order.address.district} {order.address.detail}
-                          </div>
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell>
-                        <div className="font-medium">{order.quantity}</div>
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {formatPrice(order.totalPrice)}
+                        <Link
+                          href={`/manage/orders/${order.id}`}
+                          className="block"
+                        >
+                          <div className="space-y-1 max-w-xs">
+                            <div className="font-medium">
+                              {order.address.receiverName}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {order.address.phone}
+                            </div>
+                            <div className="text-sm text-muted-foreground line-clamp-2">
+                              {order.address.province} {order.address.city}{" "}
+                              {order.address.district} {order.address.detail}
+                            </div>
+                          </div>
+                        </Link>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={orderStatusMap[order.status].variant}>
-                          {orderStatusMap[order.status].label}
-                        </Badge>
+                        <Link
+                          href={`/manage/orders/${order.id}`}
+                          className="block"
+                        >
+                          <div className="font-medium">{order.quantity}</div>
+                        </Link>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        <div className="text-sm">
-                          {new Date(order.createdAt).toLocaleDateString(
-                            "zh-CN"
-                          )}
-                        </div>
-                        <div className="text-xs">
-                          {new Date(order.createdAt).toLocaleTimeString(
-                            "zh-CN",
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </div>
+                      <TableCell>
+                        <Link
+                          href={`/manage/orders/${order.id}`}
+                          className="block font-semibold"
+                        >
+                          {formatPrice(order.totalPrice)}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/manage/orders/${order.id}`}
+                          className="block"
+                        >
+                          <Badge variant={orderStatusMap[order.status].variant}>
+                            {orderStatusMap[order.status].label}
+                          </Badge>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/manage/orders/${order.id}`}
+                          className="block text-muted-foreground"
+                        >
+                          <div className="text-sm">
+                            {new Date(order.createdAt).toLocaleDateString(
+                              "zh-CN"
+                            )}
+                          </div>
+                          <div className="text-xs">
+                            {new Date(order.createdAt).toLocaleTimeString(
+                              "zh-CN",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </div>
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

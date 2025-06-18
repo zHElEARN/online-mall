@@ -103,7 +103,12 @@ export const updateUserProfile = async (
       }
     }
 
-    const updateData: any = {};
+    const updateData: {
+      realName?: string;
+      email?: string | null;
+      phone?: string | null;
+      avatar?: string | null;
+    } = {};
     if (
       validatedData.realName !== undefined &&
       validatedData.realName.trim() !== ""

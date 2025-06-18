@@ -22,6 +22,22 @@ import {
 import Link from "next/link";
 import { getDashboardStats, getRecentOrders } from "./actions";
 
+export const dynamic = "force-dynamic";
+
+type OrderWithRelations = {
+  id: string;
+  quantity: number;
+  totalPrice: number;
+  status: "PENDING" | "PAID" | "SHIPPED" | "COMPLETED" | "CANCELED";
+  createdAt: Date;
+  product: {
+    name: string;
+  };
+  buyer: {
+    username: string;
+  };
+};
+
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("zh-CN", {
     style: "currency",
@@ -254,7 +270,7 @@ export default async function ManagePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentOrders.map((order: any) => (
+                {recentOrders.map((order: OrderWithRelations) => (
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">
                       {order.product.name}

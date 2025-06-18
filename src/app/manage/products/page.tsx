@@ -216,12 +216,9 @@ function ProductsList({
 }
 
 export default function ProductsPage() {
-  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     productId: string;
@@ -242,7 +239,7 @@ export default function ProductsPage() {
       } else {
         setError(result.error || "获取商品列表失败");
       }
-    } catch (err) {
+    } catch {
       setError("获取商品列表失败");
     } finally {
       setLoading(false);
@@ -257,7 +254,6 @@ export default function ProductsPage() {
     productId: string,
     currentStatus: boolean
   ) => {
-    setToggling(productId);
     try {
       const result = await toggleProductStatus(productId);
 
@@ -277,10 +273,8 @@ export default function ProductsPage() {
       } else {
         toast.error(result.error || "操作失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("操作失败，请重试");
-    } finally {
-      setToggling(null);
     }
   };
 
@@ -293,10 +287,9 @@ export default function ProductsPage() {
   };
 
   const confirmDelete = async () => {
-    const { productId, productName } = deleteDialog;
+    const { productId } = deleteDialog;
     setDeleteDialog({ open: false, productId: "", productName: "" });
 
-    setDeleting(productId);
     try {
       const result = await deleteProduct(productId);
 
@@ -306,10 +299,8 @@ export default function ProductsPage() {
       } else {
         toast.error(result.error || "删除失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("删除失败，请重试");
-    } finally {
-      setDeleting(null);
     }
   };
 
@@ -379,7 +370,8 @@ export default function ProductsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>确认删除</AlertDialogTitle>
             <AlertDialogDescription>
-              确定要删除商品 "{deleteDialog.productName}" 吗？此操作不可撤销。
+              确定要删除商品 &ldquo;{deleteDialog.productName}&rdquo;
+              吗？此操作不可撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

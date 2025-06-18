@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "../actions";
+import type { OrderStatus } from "@prisma/client";
 
 interface OrderWithDetails {
   id: string;
@@ -108,7 +109,7 @@ interface UpdateOrderStatusResult {
 
 export const updateOrderStatus = async (
   orderId: string,
-  status: string,
+  status: OrderStatus,
   trackingNumber?: string
 ): Promise<UpdateOrderStatusResult> => {
   try {
@@ -144,8 +145,8 @@ export const updateOrderStatus = async (
       return { success: false, error: "发货时必须提供快递单号" };
     }
 
-    const updateData: any = {
-      status: status as any,
+    const updateData: { status: OrderStatus; trackingNumber?: string } = {
+      status: status,
     };
 
     if (trackingNumber) {

@@ -34,7 +34,7 @@ function ProfileForm({ user }: { user: UserInfo }) {
       } else {
         toast.error(result.error || "更新失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("更新失败，请稍后重试");
     } finally {
       setIsLoading(false);
@@ -151,7 +151,7 @@ function PasswordForm() {
       } else {
         toast.error(result.error || "修改失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("修改失败，请稍后重试");
     } finally {
       setIsLoading(false);
@@ -222,7 +222,7 @@ export default function SettingsPage() {
         } else {
           toast.error(result.error || "获取用户信息失败");
         }
-      } catch (error) {
+      } catch {
         toast.error("获取用户信息失败");
       } finally {
         setIsLoading(false);

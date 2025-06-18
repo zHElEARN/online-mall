@@ -27,12 +27,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { OrderStatus } from "@prisma/client";
 import { Eye, MoreHorizontal, Package, Truck, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { cancelOrder, getSellerOrders, updateOrderStatus } from "./actions";
 import { OrdersPageSkeleton } from "./skeleton";
+
+interface OrderWithDetails {
+  id: string;
+  quantity: number;
+  totalPrice: number;
+  status: string;
+  note: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  buyer: {
+    id: string;
+    username: string;
+    email: string | null;
+    phone: string | null;
+    realName: string | null;
+  };
+  product: {
+    id: string;
+    name: string;
+    price: number;
+    images: string;
+  };
+  address: {
+    id: string;
+    receiverName: string;
+    phone: string;
+    province: string;
+    city: string;
+    district: string;
+    detail: string;
+  };
+}
 
 const orderStatusMap = {
   PENDING: {
@@ -66,7 +99,7 @@ const statusActions = {
   PENDING: [
     {
       type: "cancel",
-      status: "CANCELED",
+      status: "CANCELED" as OrderStatus,
       label: "取消订单",
       icon: X,
       variant: "destructive" as const,
@@ -75,7 +108,7 @@ const statusActions = {
   PAID: [
     {
       type: "update",
-      status: "SHIPPED",
+      status: "SHIPPED" as OrderStatus,
       label: "发货",
       icon: Truck,
       variant: "default" as const,
@@ -88,7 +121,7 @@ const statusActions = {
 
 function OrdersList() {
   const router = useRouter();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shipDialog, setShipDialog] = useState<{
@@ -113,7 +146,7 @@ function OrdersList() {
 
       setOrders(result.orders || []);
       setError(null);
-    } catch (err) {
+    } catch {
       setError("获取订单失败");
     } finally {
       setLoading(false);
@@ -126,7 +159,7 @@ function OrdersList() {
 
   const handleUpdateStatus = async (
     orderId: string,
-    status: string,
+    status: OrderStatus,
     trackingNumber?: string
   ) => {
     try {
@@ -159,7 +192,7 @@ function OrdersList() {
 
     await handleUpdateStatus(
       shipDialog.orderId,
-      "SHIPPED",
+      "SHIPPED" as OrderStatus,
       shipDialog.trackingNumber
     );
     setShipDialog({

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -348,9 +349,11 @@ export default function CreateProductPage() {
                           key={index}
                           className="relative group rounded-lg border overflow-hidden"
                         >
-                          <img
+                          <Image
                             src={image}
                             alt={`商品图片 ${index + 1}`}
+                            width={200}
+                            height={200}
                             className="aspect-square w-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;

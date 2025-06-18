@@ -11,11 +11,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { register } from "./actions";
-import Link from "next/link";
 
 export default function RegisterPage() {
   const [pending, setPending] = useState(false);
@@ -38,7 +38,7 @@ export default function RegisterPage() {
       } else {
         toast.error(result.error || "注册失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("注册失败，请稍后再试");
     } finally {
       setPending(false);
