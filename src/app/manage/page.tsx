@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -41,11 +40,41 @@ function formatDate(date: Date) {
 }
 
 const orderStatusMap = {
-  PENDING: { label: "待支付", variant: "outline" as const },
-  PAID: { label: "已支付", variant: "default" as const },
-  SHIPPED: { label: "已发货", variant: "secondary" as const },
-  COMPLETED: { label: "已完成", variant: "outline" as const },
-  CANCELED: { label: "已取消", variant: "destructive" as const },
+  PENDING: {
+    label: "待支付",
+    variant: "secondary" as const,
+    color: "text-yellow-600 dark:text-yellow-400",
+    bgColor: "bg-yellow-50 dark:bg-yellow-950/30",
+    borderColor: "border-yellow-200 dark:border-yellow-800",
+  },
+  PAID: {
+    label: "已支付",
+    variant: "default" as const,
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-50 dark:bg-amber-950/30",
+    borderColor: "border-amber-200 dark:border-amber-800",
+  },
+  SHIPPED: {
+    label: "已发货",
+    variant: "default" as const,
+    color: "text-orange-600 dark:text-orange-400",
+    bgColor: "bg-orange-50 dark:bg-orange-950/30",
+    borderColor: "border-orange-200 dark:border-orange-800",
+  },
+  COMPLETED: {
+    label: "已完成",
+    variant: "default" as const,
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-50 dark:bg-green-950/30",
+    borderColor: "border-green-200 dark:border-green-800",
+  },
+  CANCELED: {
+    label: "已取消",
+    variant: "destructive" as const,
+    color: "text-gray-600 dark:text-gray-400",
+    bgColor: "bg-gray-50 dark:bg-gray-950/30",
+    borderColor: "border-gray-200 dark:border-gray-800",
+  },
 };
 
 export default async function ManagePage() {
@@ -234,19 +263,27 @@ export default async function ManagePage() {
                     <TableCell>{order.quantity}</TableCell>
                     <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={
+                      <div
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
                           orderStatusMap[
                             order.status as keyof typeof orderStatusMap
-                          ].variant
-                        }
+                          ].bgColor
+                        } ${
+                          orderStatusMap[
+                            order.status as keyof typeof orderStatusMap
+                          ].borderColor
+                        } ${
+                          orderStatusMap[
+                            order.status as keyof typeof orderStatusMap
+                          ].color
+                        } border`}
                       >
                         {
                           orderStatusMap[
                             order.status as keyof typeof orderStatusMap
                           ].label
                         }
-                      </Badge>
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(order.createdAt)}

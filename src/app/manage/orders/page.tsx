@@ -58,7 +58,7 @@ const orderStatusMap = {
   CANCELED: {
     label: "已取消",
     variant: "destructive" as const,
-    color: "text-red-600",
+    color: "text-white dark:text-red-100",
   },
 };
 
@@ -255,7 +255,11 @@ function OrdersList() {
                   [];
 
                 return (
-                  <TableRow key={order.id}>
+                  <TableRow
+                    key={order.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleViewOrder(order.id)}
+                  >
                     <TableCell>
                       <div className="space-y-1">
                         <div className="font-medium">
@@ -320,14 +324,21 @@ function OrdersList() {
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <span className="sr-only">打开菜单</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => handleViewOrder(order.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewOrder(order.id);
+                            }}
                           >
                             <Eye className="mr-2 h-4 w-4" />
                             查看订单
@@ -341,7 +352,8 @@ function OrdersList() {
                                   ? "text-destructive"
                                   : ""
                               }
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 if (action.type === "cancel") {
                                   handleCancelOrder(order.id);
                                 } else if (action.status === "SHIPPED") {

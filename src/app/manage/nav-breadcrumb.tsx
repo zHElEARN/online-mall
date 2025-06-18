@@ -69,7 +69,7 @@ export function NavBreadcrumb() {
         isLast,
       });
     } else {
-      // 处理动态路由（如商品ID）
+      // 处理动态路由（如商品ID、订单ID）
       if (
         index > 0 &&
         pathSegments[index - 1] === "products" &&
@@ -79,6 +79,17 @@ export function NavBreadcrumb() {
         breadcrumbItems.push({
           path,
           label: "商品详情",
+          isLast,
+        });
+      } else if (
+        index > 0 &&
+        pathSegments[index - 1] === "orders" &&
+        pathSegments[0] === "manage"
+      ) {
+        // 这是一个订单ID
+        breadcrumbItems.push({
+          path,
+          label: "订单详情",
           isLast,
         });
       }

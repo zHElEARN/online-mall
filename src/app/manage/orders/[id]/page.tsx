@@ -77,31 +77,41 @@ const orderStatusMap = {
   PENDING: {
     label: "待支付",
     variant: "secondary" as const,
-    color: "text-orange-600",
+    color: "text-yellow-600 dark:text-yellow-400",
+    bgColor: "bg-yellow-50 dark:bg-yellow-950/30",
+    borderColor: "border-yellow-200 dark:border-yellow-800",
     icon: Clock,
   },
   PAID: {
     label: "已支付",
     variant: "default" as const,
-    color: "text-blue-600",
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-50 dark:bg-amber-950/30",
+    borderColor: "border-amber-200 dark:border-amber-800",
     icon: CreditCard,
   },
   SHIPPED: {
     label: "已发货",
     variant: "default" as const,
-    color: "text-purple-600",
+    color: "text-orange-600 dark:text-orange-400",
+    bgColor: "bg-orange-50 dark:bg-orange-950/30",
+    borderColor: "border-orange-200 dark:border-orange-800",
     icon: Truck,
   },
   COMPLETED: {
     label: "已完成",
     variant: "default" as const,
-    color: "text-green-600",
+    color: "text-green-600 dark:text-green-400",
+    bgColor: "bg-green-50 dark:bg-green-950/30",
+    borderColor: "border-green-200 dark:border-green-800",
     icon: CheckCircle,
   },
   CANCELED: {
     label: "已取消",
     variant: "destructive" as const,
-    color: "text-red-600",
+    color: "text-gray-600 dark:text-gray-400",
+    bgColor: "bg-gray-50 dark:bg-gray-950/30",
+    borderColor: "border-gray-200 dark:border-gray-800",
     icon: XCircle,
   },
 };
@@ -296,20 +306,31 @@ export default function OrderPage({
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <Badge variant={statusInfo?.variant} className="text-sm">
-                  {statusInfo?.label}
-                </Badge>
+              <div className="space-y-3">
+                <div
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${statusInfo?.bgColor} ${statusInfo?.borderColor}`}
+                >
+                  <StatusIcon className={`h-4 w-4 ${statusInfo?.color}`} />
+                  <span className={`font-medium ${statusInfo?.color}`}>
+                    {statusInfo?.label}
+                  </span>
+                </div>
                 <div className="text-sm text-muted-foreground space-y-1">
                   <p>创建时间: {formatDate(order.createdAt)}</p>
                   <p>更新时间: {formatDate(order.updatedAt)}</p>
                   {order.trackingNumber && (
-                    <p>快递单号: {order.trackingNumber}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Package className="h-4 w-4" />
+                      <span className="font-medium">快递单号:</span>
+                      <code className="px-2 py-1 bg-muted rounded text-sm font-mono">
+                        {order.trackingNumber}
+                      </code>
+                    </div>
                   )}
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-foreground">
                   {formatPrice(order.totalPrice)}
                 </p>
                 <p className="text-sm text-muted-foreground">总金额</p>
@@ -340,7 +361,7 @@ export default function OrderPage({
                           handleUpdateStatus(order.id, action.status);
                         }
                       }}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-2 transition-all duration-200 hover:scale-105"
                     >
                       <ActionIcon className="h-4 w-4" />
                       {action.label}
