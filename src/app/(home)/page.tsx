@@ -48,58 +48,50 @@ function ProductCard({ product }: { product: Product }) {
           <div className="w-full h-48 bg-muted flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
-              <p className="text-sm">{product.name}</p>
+              <p className="text-sm">暂无图片</p>
             </div>
           </div>
         )}
       </div>
-      <CardContent className="p-4 pb-0 flex-1 flex flex-col justify-between">
-        <div>
-          <h3
-            className="font-semibold text-lg mb-2 overflow-hidden text-ellipsis h-14"
-            style={{
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-            }}
-          >
-            {product.name}
-          </h3>
-          <p
-            className="text-muted-foreground text-sm mb-2 overflow-hidden text-ellipsis h-10"
-            style={{
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-            }}
-          >
-            {product.description || "暂无商品描述"}
+
+      <CardContent className="p-4 flex-1 flex flex-col">
+        <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+          {product.name}
+        </h3>
+
+        {product.description && (
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
+            {product.description}
           </p>
-        </div>
-        <div>
-          <div className="flex items-center gap-1 mb-2">
-            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span className="text-sm text-muted-foreground">
-              {product._count.reviews > 0 ? "4.5" : "暂无评分"}
-            </span>
-            <span className="text-sm text-muted-foreground/60">
-              ({product._count.reviews} 评价)
-            </span>
-          </div>
+        )}
+
+        <div className="mt-auto space-y-2">
           <div className="flex items-center justify-between">
-            <div>
-              <span className="text-2xl font-bold text-destructive">
-                ¥{product.price.toFixed(2)}
-              </span>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              已售 {product.salesCount}
+            <span className="text-2xl font-bold text-primary">
+              ¥{product.price.toFixed(2)}
             </span>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
+              <span>({product._count.reviews})</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>售出 {product.salesCount}</span>
+            <span>库存 {product.stock}</span>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            店铺: {product.seller.username}
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 mt-auto">
-        <Button className="w-full">立即购买</Button>
+
+      <CardFooter className="p-4 pt-0">
+        <Button className="w-full" size="sm">
+          <ShoppingBag className="w-4 h-4 mr-2" />
+          加入购物车
+        </Button>
       </CardFooter>
     </Card>
   );
