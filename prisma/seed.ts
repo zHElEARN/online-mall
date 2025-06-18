@@ -149,9 +149,72 @@ async function main() {
     });
   }
 
+  // 创建买家地址
+  const address1 = await prisma.address.create({
+    data: {
+      receiverName: "张三",
+      phone: "13800138001",
+      province: "广东省",
+      city: "深圳市",
+      district: "南山区",
+      detail: "科技园南区深南大道10000号腾讯大厦A座1001室",
+      isDefault: true,
+      userId: buyer.id,
+    },
+  });
+
+  const address2 = await prisma.address.create({
+    data: {
+      receiverName: "张三",
+      phone: "13800138001",
+      province: "北京市",
+      city: "北京市",
+      district: "海淀区",
+      detail: "中关村大街1号海龙大厦B座2008室",
+      isDefault: false,
+      userId: buyer.id,
+    },
+  });
+
+  // 获取商品用于创建订单
+  const allProducts = await prisma.product.findMany();
+  const iphone = allProducts.find((p) => p.name === "iPhone 15 Pro");
+  const macbook = allProducts.find((p) => p.name === "MacBook Air M2");
+
+  // 创建订单
+  if (iphone) {
+    await prisma.order.create({
+      data: {
+        quantity: 1,
+        totalPrice: iphone.price,
+        status: "PAID",
+        note: "请尽快发货，谢谢！",
+        buyerId: buyer.id,
+        productId: iphone.id,
+        addressId: address1.id,
+      },
+    });
+  }
+
+  if (macbook) {
+    await prisma.order.create({
+      data: {
+        quantity: 1,
+        totalPrice: macbook.price,
+        status: "PENDING",
+        note: "送货时请提前电话联系",
+        buyerId: buyer.id,
+        productId: macbook.id,
+        addressId: address2.id,
+      },
+    });
+  }
+
   console.log("数据填充完成!");
   console.log(`创建用户: ${buyer.username} (买家), ${seller.username} (卖家)`);
   console.log(`创建商品: ${products.length} 个`);
+  console.log("创建地址: 2 个");
+  console.log("创建订单: 2 个");
   console.log("默认密码: 123456");
 }
 
