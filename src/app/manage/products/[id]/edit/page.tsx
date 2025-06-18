@@ -16,9 +16,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ImagePlus, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { createProduct } from "./actions";
+import { getProductForEdit, updateProduct } from "./actions";
 
 interface FormData {
   name: string;
@@ -27,6 +27,7 @@ interface FormData {
   stock: string;
   category: string;
   images: string[];
+  isActive: boolean;
 }
 
 interface FormErrors {
@@ -46,9 +47,15 @@ const PRODUCT_CATEGORIES = [
   "其他",
 ];
 
-export default function CreateProductPage() {
+export default function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
@@ -56,9 +63,44 @@ export default function CreateProductPage() {
     stock: "",
     category: "",
     images: [],
+    isActive: true,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [imagePreview, setImagePreview] = useState<string>("");
+
+  // 加载商品数据
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        setIsPageLoading(true);
+        const product = await getProductForEdit(id);
+
+        if (!product) {
+          toast.error("商品不存在或无权访问");
+          router.push("/manage/products");
+          return;
+        }
+
+        setFormData({
+          name: product.name,
+          description: product.description || "",
+          price: product.price.toString(),
+          stock: product.stock.toString(),
+          category: product.category || "",
+          images: product.images,
+          isActive: product.isActive,
+        });
+      } catch (error) {
+        console.error("加载商品失败:", error);
+        toast.error("加载商品失败");
+        router.push("/manage/products");
+      } finally {
+        setIsPageLoading(false);
+      }
+    };
+
+    loadProduct();
+  }, [id, router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -156,39 +198,77 @@ export default function CreateProductPage() {
     setIsLoading(true);
 
     try {
-      const result = await createProduct({
+      const result = await updateProduct(id, {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock),
         category: formData.category || undefined,
         images: formData.images,
+        isActive: formData.isActive,
       });
 
       if (result.success) {
-        toast.success("商品创建成功");
-        router.push("/manage/products");
+        toast.success("商品更新成功");
+        router.push(`/manage/products/${id}`);
       } else {
         if (result.fieldErrors) {
           setErrors(result.fieldErrors);
         }
-        toast.error(result.error || "创建失败");
+        toast.error(result.error || "更新失败");
       }
     } catch (error) {
-      console.error("创建商品失败:", error);
-      toast.error("创建失败，请稍后重试");
+      console.error("更新商品失败:", error);
+      toast.error("更新失败，请稍后重试");
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (isPageLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded mb-6"></div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="h-6 bg-muted rounded"></div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="h-10 bg-muted rounded"></div>
+                  <div className="h-20 bg-muted rounded"></div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="h-10 bg-muted rounded"></div>
+                    <div className="h-10 bg-muted rounded"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div>
+              <Card>
+                <CardHeader>
+                  <div className="h-6 bg-muted rounded"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-10 bg-muted rounded"></div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex items-center gap-4 mb-6">
-        <BackButton href="/manage/products">返回商品列表</BackButton>
+        <BackButton href={`/manage/products/${id}`}>返回商品详情</BackButton>
         <div>
-          <h1 className="text-2xl font-bold">创建商品</h1>
-          <p className="text-muted-foreground">填写商品信息并发布到商城</p>
+          <h1 className="text-2xl font-bold">编辑商品</h1>
+          <p className="text-muted-foreground">修改商品信息</p>
         </div>
       </div>
 
@@ -379,18 +459,45 @@ export default function CreateProductPage() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>发布设置</CardTitle>
+                <CardTitle>商品状态</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
+                  <Label>上架状态</Label>
+                  <Select
+                    value={formData.isActive ? "active" : "inactive"}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        isActive: value === "active",
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">已上架</SelectItem>
+                      <SelectItem value="inactive">已下架</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <p className="text-sm text-muted-foreground">
-                    商品创建后将自动上架，您可以随时在商品列表中修改商品状态。
+                    {formData.isActive
+                      ? "商品将在商城中显示，用户可以购买"
+                      : "商品将不在商城中显示，用户无法购买"}
                   </p>
                 </div>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardHeader>
+                <CardTitle>操作</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "创建中..." : "创建商品"}
+                    {isLoading ? "保存中..." : "保存更改"}
                   </Button>
                   <Button
                     type="button"
@@ -398,7 +505,7 @@ export default function CreateProductPage() {
                     className="w-full"
                     asChild
                   >
-                    <Link href="/manage/products">取消</Link>
+                    <Link href={`/manage/products/${id}`}>取消</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -406,14 +513,14 @@ export default function CreateProductPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>创建提示</CardTitle>
+                <CardTitle>编辑提示</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>• 商品名称应该简洁明了，方便买家搜索</p>
-                <p>• 详细的商品描述有助于提高转化率</p>
-                <p>• 请确保图片清晰，展示商品的真实外观</p>
-                <p>• 合理的价格定位有助于商品销售</p>
-                <p>• 及时更新库存信息，避免超卖</p>
+                <p>• 修改商品信息后，变更将立即生效</p>
+                <p>• 价格变更可能影响已有订单的处理</p>
+                <p>• 库存调整建议基于实际库存情况</p>
+                <p>• 下架商品将停止销售但不影响已有订单</p>
+                <p>• 重要修改建议在非高峰时段进行</p>
               </CardContent>
             </Card>
           </div>

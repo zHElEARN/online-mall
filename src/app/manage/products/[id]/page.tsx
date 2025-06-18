@@ -1,11 +1,12 @@
 "use client";
 
-import { ArrowLeft, Package, Star, TrendingUp } from "lucide-react";
+import { Package, Star, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
+import { BackButton } from "@/components/back-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -164,12 +165,7 @@ function ProductDetailContent({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/manage/products">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              返回商品列表
-            </Link>
-          </Button>
+          <BackButton href="/manage/products">返回商品列表</BackButton>
           <h1 className="text-2xl font-bold">商品详情</h1>
         </div>
         <Button asChild>
@@ -501,7 +497,7 @@ export default function ProductPage({ params }: ProductPageProps) {
           <h1 className="text-2xl font-bold text-destructive mb-2">
             {error || "加载失败"}
           </h1>
-          <Button onClick={() => router.back()}>返回</Button>
+          <BackButton onClick={() => router.back()}>返回</BackButton>
         </div>
       </div>
     );
