@@ -75,7 +75,8 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith("/auth") &&
     !isAuthenticated &&
-    pathname !== "/auth/login"
+    pathname !== "/auth/login" &&
+    pathname !== "/auth/register"
   ) {
     actionDescription = `未认证用户从 ${pathname} 重定向到 /auth/login`;
     logMiddlewareAction(pathname, isAuthenticated, role, actionDescription);

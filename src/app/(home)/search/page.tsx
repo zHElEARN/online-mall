@@ -106,7 +106,7 @@ async function SearchResults({ query }: { query: string }) {
         <Search className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
         <h3 className="text-xl font-semibold mb-2">未找到相关商品</h3>
         <p className="text-muted-foreground">
-          没有找到与 "{query}" 相关的商品，请尝试其他关键词
+          没有找到与 &ldquo;{query}&rdquo; 相关的商品，请尝试其他关键词
         </p>
       </div>
     );
@@ -118,7 +118,7 @@ async function SearchResults({ query }: { query: string }) {
         <h2 className="text-xl font-semibold">
           搜索结果 ({products.length} 件商品)
         </h2>
-        <p className="text-muted-foreground">关键词: "{query}"</p>
+        <p className="text-muted-foreground">关键词: &ldquo;{query}&rdquo;</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
