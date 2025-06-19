@@ -25,7 +25,6 @@ const updateUserProfileSchema = z.object({
     .or(z.literal("")),
   avatar: z
     .string()
-    .url("头像URL格式不正确")
     .max(500, "头像URL不能超过500个字符")
     .optional()
     .or(z.literal("")),

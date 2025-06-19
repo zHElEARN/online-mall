@@ -6,18 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ImagePlus, X } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createProduct } from "./actions";
 
@@ -50,6 +50,8 @@ const PRODUCT_CATEGORIES = [
 export default function CreateProductPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
@@ -59,7 +61,6 @@ export default function CreateProductPage() {
     images: [],
   });
   const [errors, setErrors] = useState<FormErrors>({});
-  const [imagePreview, setImagePreview] = useState<string>("");
 
   useEffect(() => {
     document.title = "创建商品 | 管理后台";
@@ -96,33 +97,71 @@ export default function CreateProductPage() {
     }
   };
 
-  const handleImageAdd = () => {
-    if (imagePreview.trim()) {
-      if (formData.images.includes(imagePreview.trim())) {
-        toast.error("图片已存在");
-        return;
-      }
+  const handleImagesChange = (images: string[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      images,
+    }));
 
-      setFormData((prev) => ({
+    if (errors.images) {
+      setErrors((prev) => ({
         ...prev,
-        images: [...prev.images, imagePreview.trim()],
+        images: [],
       }));
-      setImagePreview("");
+    }
+  };
 
-      if (errors.images) {
-        setErrors((prev) => ({
-          ...prev,
-          images: [],
-        }));
+  const handleFileSelect = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const maxImages = 10;
+    if (formData.images.length + files.length > maxImages) {
+      toast.error(`最多只能上传 ${maxImages} 张图片`);
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || "上传失败");
+        }
+
+        return result.data.url;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      const newImages = [...formData.images, ...uploadedUrls];
+      handleImagesChange(newImages);
+
+      toast.success(`成功上传 ${uploadedUrls.length} 张图片`);
+    } catch (error) {
+      console.error("上传失败:", error);
+      toast.error(
+        error instanceof Error ? error.message : "上传失败，请稍后重试"
+      );
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     }
   };
 
   const handleImageRemove = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }));
+    const newImages = formData.images.filter((_, i) => i !== index);
+    handleImagesChange(newImages);
   };
 
   const validateForm = (): boolean => {
@@ -314,51 +353,61 @@ export default function CreateProductPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>
-                    添加图片 <span className="text-destructive">*</span>
+                    商品图片 <span className="text-destructive">*</span>
                   </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={imagePreview}
-                      onChange={(e) => setImagePreview(e.target.value)}
-                      placeholder="请输入图片 URL"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleImageAdd();
-                        }
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      onClick={handleImageAdd}
-                      disabled={!imagePreview.trim()}
-                    >
-                      <ImagePlus className="h-4 w-4" />
-                      添加
-                    </Button>
-                  </div>
+
+                  {/* 文件上传区域 */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFileSelect(e.target.files)}
+                    disabled={isLoading || isUploading}
+                  />
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={
+                      isLoading || isUploading || formData.images.length >= 10
+                    }
+                    className="w-full"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {isUploading ? "上传中..." : "选择图片上传"}
+                  </Button>
+
                   {errors.images && (
                     <p className="text-sm text-destructive">
                       {errors.images[0]}
                     </p>
                   )}
+
+                  <p className="text-sm text-muted-foreground">
+                    支持 JPEG、PNG、GIF、WebP 格式，单个文件不超过 5MB，最多 10
+                    张图片
+                  </p>
                 </div>
 
+                {/* 图片预览区域 */}
                 {formData.images.length > 0 && (
                   <div className="space-y-2">
-                    <Label>已添加的图片</Label>
+                    <Label>已添加的图片 ({formData.images.length}/10)</Label>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {formData.images.map((image, index) => (
                         <div
                           key={index}
-                          className="relative group rounded-lg border overflow-hidden"
+                          className="relative group rounded-lg border overflow-hidden bg-muted"
                         >
                           <Image
                             src={image}
-                            alt={`商品图片 ${index + 1}`}
+                            alt={`图片 ${index + 1}`}
                             width={200}
                             height={200}
-                            className="aspect-square w-full object-cover"
+                            className="aspect-square w-full object-cover transition-opacity group-hover:opacity-75"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src =
@@ -369,11 +418,15 @@ export default function CreateProductPage() {
                             type="button"
                             variant="destructive"
                             size="sm"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
                             onClick={() => handleImageRemove(index)}
+                            disabled={isLoading}
                           >
                             <X className="h-3 w-3" />
                           </Button>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
+                            {index + 1}
+                          </div>
                         </div>
                       ))}
                     </div>

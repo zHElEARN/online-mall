@@ -7,13 +7,54 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserInfo } from "@/types/user";
-import { FormEvent, useEffect, useState } from "react";
+import { Camera } from "lucide-react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { getCurrentUser } from "../actions";
 import { changePassword, updateUserProfile } from "./actions";
 
 function ProfileForm({ user }: { user: UserInfo }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      // 创建表单数据
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // 调用上传API
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        toast.error(result.error || "头像上传失败");
+        return;
+      }
+
+      if (result.success && result.data.url) {
+        setAvatarUrl(result.data.url);
+        toast.success("头像上传成功");
+      } else {
+        toast.error("头像上传失败");
+      }
+    } catch (error) {
+      console.error("头像上传失败:", error);
+      toast.error("头像上传失败，请稍后重试");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,7 +66,7 @@ function ProfileForm({ user }: { user: UserInfo }) {
         realName: formData.get("realName") as string,
         email: formData.get("email") as string,
         phone: formData.get("phone") as string,
-        avatar: formData.get("avatar") as string,
+        avatar: avatarUrl, // 使用上传后的头像URL
       };
 
       const result = await updateUserProfile(data);
@@ -49,16 +90,41 @@ function ProfileForm({ user }: { user: UserInfo }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center gap-4 mb-6">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={user.avatar || ""} alt="头像" />
-              <AvatarFallback className="text-lg font-semibold">
-                {user.username.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={avatarUrl} alt="头像" />
+                <AvatarFallback className="text-lg font-semibold">
+                  {user.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <Button
+                type="button"
+                size="sm"
+                className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <div className="animate-spin">⌛</div>
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
             <div>
               <div className="font-medium">{user.username}</div>
               <div className="text-sm text-muted-foreground">
                 {user.role === "SELLER" ? "商家" : "买家"}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                点击相机图标上传新头像
               </div>
             </div>
           </div>
@@ -107,20 +173,14 @@ function ProfileForm({ user }: { user: UserInfo }) {
                 placeholder="请输入手机号"
               />
             </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="avatar">头像URL</Label>
-              <Input
-                id="avatar"
-                name="avatar"
-                defaultValue={user.avatar || ""}
-                placeholder="请输入头像图片URL"
-              />
-            </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? "保存中..." : "保存更改"}
+          <Button
+            type="submit"
+            disabled={isLoading || isUploading}
+            className="w-full"
+          >
+            {isLoading ? "保存中..." : isUploading ? "上传中..." : "保存更改"}
           </Button>
         </form>
       </CardContent>
@@ -215,7 +275,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     document.title = "设置 | 管理后台";
-    
+
     const fetchUser = async () => {
       try {
         const result = await getCurrentUser();

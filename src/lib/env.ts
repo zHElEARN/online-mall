@@ -8,4 +8,9 @@ if (!MOCK_CAPTCHA) {
   throw new Error("MOCK_CAPTCHA environment variable is not set");
 }
 
-export { JWT_SECRET, MOCK_CAPTCHA };
+const ENDPOINT_URL = process.env.ENDPOINT_URL;
+if (!ENDPOINT_URL) {
+  throw new Error("ENDPOINT_URL environment variable is not set");
+}
+
+export { JWT_SECRET, MOCK_CAPTCHA, ENDPOINT_URL };

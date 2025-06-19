@@ -43,3 +43,4 @@ next-env.d.ts
 certificates
 prisma/dev.db
 
+public/uploads
