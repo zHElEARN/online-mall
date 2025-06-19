@@ -140,12 +140,8 @@ export default function ConfirmPage() {
   };
 
   const getFirstImage = (images: string) => {
-    try {
-      const imageArray = JSON.parse(images);
-      return imageArray[0] || "/placeholder.jpg";
-    } catch {
-      return "/placeholder.jpg";
-    }
+    const imageArray = JSON.parse(images);
+    return imageArray[0];
   };
 
   if (isLoading) {
@@ -153,7 +149,7 @@ export default function ConfirmPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* 头部导航 */}
       <div className="flex items-center gap-4 mb-6">
         <Link href="/cart">
@@ -367,6 +363,6 @@ export default function ConfirmPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

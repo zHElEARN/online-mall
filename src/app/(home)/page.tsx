@@ -6,13 +6,10 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, ShoppingBag, ShoppingCart, Star } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  addToCart,
-  checkProductInCart,
-  getRecommendedProducts,
-} from "./actions";
+import { addToCart, getRecommendedProducts } from "./actions";
 import { ProductRecommendationsSkeleton } from "./skeleton";
 
 type Product = {
@@ -38,23 +35,6 @@ type Product = {
 
 function ProductCard({ product }: { product: Product }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);
-  const [isCheckingCart, setIsCheckingCart] = useState(true);
-
-  useEffect(() => {
-    const checkCart = async () => {
-      try {
-        const inCart = await checkProductInCart(product.id);
-        setIsInCart(inCart);
-      } catch (error) {
-        console.error("检查购物车状态失败:", error);
-      } finally {
-        setIsCheckingCart(false);
-      }
-    };
-
-    checkCart();
-  }, [product.id]);
 
   const getFirstImage = (images: string) => {
     try {
@@ -70,11 +50,11 @@ function ProductCard({ product }: { product: Product }) {
     return null;
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault(); // 防止触发 Link 跳转
     setIsLoading(true);
     try {
       await addToCart(product.id, 1);
-      setIsInCart(true);
       toast.success("商品已加入购物车");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "加入购物车失败");
@@ -85,35 +65,39 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <Card className="group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 h-full flex flex-col p-0">
-      <div className="relative overflow-hidden aspect-square">
-        {getFirstImage(product.images) ? (
-          <Image
-            src={getFirstImage(product.images)}
-            alt={product.name}
-            width={400}
-            height={400}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-          />
-        ) : (
-          <div className="w-full h-full bg-muted flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
-              <p className="text-sm">暂无图片</p>
+      <Link href={`/products/${product.id}`} className="block">
+        <div className="relative overflow-hidden aspect-square">
+          {getFirstImage(product.images) ? (
+            <Image
+              src={getFirstImage(product.images)}
+              alt={product.name}
+              width={400}
+              height={400}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            />
+          ) : (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
+                <p className="text-sm">暂无图片</p>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Link>
 
       <CardContent className="p-4 flex-1 flex flex-col">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-          {product.name}
-        </h3>
+        <Link href={`/products/${product.id}`} className="block">
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2 hover:text-primary transition-colors">
+            {product.name}
+          </h3>
 
-        {product.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-            {product.description}
-          </p>
-        )}
+          {product.description && (
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+              {product.description}
+            </p>
+          )}
+        </Link>
 
         <div className="space-y-2 mt-auto">
           <div className="flex items-center justify-between">
@@ -148,24 +132,14 @@ function ProductCard({ product }: { product: Product }) {
       <CardFooter className="p-4 pt-0">
         <Button
           onClick={handleAddToCart}
-          disabled={
-            isLoading || product.stock === 0 || isInCart || isCheckingCart
-          }
+          disabled={isLoading || product.stock === 0}
           className="w-full"
           size="sm"
-          variant={isInCart ? "secondary" : "default"}
         >
-          {isCheckingCart ? (
-            <>检查中...</>
-          ) : isLoading ? (
+          {isLoading ? (
             <>加入中...</>
           ) : product.stock === 0 ? (
             "缺货"
-          ) : isInCart ? (
-            <>
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              已加入购物车
-            </>
           ) : (
             <>
               <ShoppingCart className="w-4 h-4 mr-2" />
@@ -258,7 +232,9 @@ export default function Home() {
       <section>
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-foreground">商品推荐</h2>
-          <Button variant="outline">查看更多</Button>
+          <Link href="/products">
+            <Button variant="outline">查看更多</Button>
+          </Link>
         </div>
 
         <ProductRecommendations />
