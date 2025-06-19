@@ -322,7 +322,7 @@ function OrdersList() {
                           {order.address.phone}
                         </div>
                         <div className="text-sm text-muted-foreground line-clamp-2">
-                          {order.address.province} {order.address.city}{" "}
+                          {order.address.province} {order.address.city}
                           {order.address.district} {order.address.detail}
                         </div>
                       </div>

@@ -2,22 +2,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-    AlertTriangle,
-    DollarSign,
-    Package,
-    Plus,
-    ShoppingCart,
-    TrendingUp,
-    Users,
-    Warehouse,
+  AlertTriangle,
+  DollarSign,
+  Package,
+  Plus,
+  ShoppingCart,
+  TrendingUp,
+  Users,
+  Warehouse,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -323,20 +323,20 @@ export default async function ManagePage() {
       </Card>
 
       {stats.lowStockProducts > 0 && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30">
           <CardHeader>
-            <CardTitle className="flex items-center text-orange-800">
+            <CardTitle className="flex items-center text-orange-800 dark:text-orange-200">
               <AlertTriangle className="mr-2 h-5 w-5" />
               库存预警
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-orange-700">
-              您有 {stats.lowStockProducts}{" "}
+            <p className="text-orange-700 dark:text-orange-300">
+              您有 {stats.lowStockProducts}
               件商品库存不足（少于10件），建议及时补货。
             </p>
             <Button className="mt-4" variant="outline" size="sm" asChild>
-              <Link href="/manage/products?filter=low-stock">
+              <Link href="/manage/products">
                 查看低库存商品
               </Link>
             </Button>

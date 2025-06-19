@@ -218,7 +218,7 @@ export default function ConfirmPage() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {address.province} {address.city} {address.district}{" "}
+                          {address.province} {address.city} {address.district}
                           {address.detail}
                         </p>
                       </div>

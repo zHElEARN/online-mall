@@ -119,7 +119,7 @@ export async function createPendingOrdersFromCart() {
     const authStatus = await getAuthStatus();
 
     if (!authStatus.isAuthenticated || !authStatus.user) {
-      throw new Error("未登录");
+      return { success: false, error: "未登录" };
     }
 
     // 获取购物车商品
@@ -133,13 +133,13 @@ export async function createPendingOrdersFromCart() {
     });
 
     if (cartItems.length === 0) {
-      throw new Error("购物车为空");
+      return { success: false, error: "购物车为空" };
     }
 
     // 检查库存
     for (const item of cartItems) {
       if (item.product.stock < item.quantity) {
-        throw new Error(`商品 ${item.product.name} 库存不足`);
+        return { success: false, error: `商品 ${item.product.name} 库存不足` };
       }
     }
 
@@ -152,7 +152,7 @@ export async function createPendingOrdersFromCart() {
     });
 
     if (!defaultAddress) {
-      throw new Error("请先添加收货地址");
+      return { success: false, error: "请先添加收货地址", needAddress: true };
     }
 
     // 创建待支付订单并清空购物车
@@ -187,6 +187,6 @@ export async function createPendingOrdersFromCart() {
     return { success: true };
   } catch (error) {
     console.error("创建待支付订单失败:", error);
-    throw error;
+    return { success: false, error: "创建订单失败，请稍后重试" };
   }
 }

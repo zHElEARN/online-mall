@@ -1,17 +1,17 @@
 "use client";
 
 import {
-  CheckCircle,
-  Clock,
-  CreditCard,
-  Mail,
-  MapPin,
-  Package,
-  Phone,
-  Truck,
-  User,
-  X,
-  XCircle,
+    CheckCircle,
+    Clock,
+    CreditCard,
+    Mail,
+    MapPin,
+    Package,
+    Phone,
+    Truck,
+    User,
+    X,
+    XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -23,12 +23,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -495,7 +495,7 @@ export default function OrderPage({
                 </span>
               </div>
               <p className="text-sm">
-                {order.address.province} {order.address.city}{" "}
+                {order.address.province} {order.address.city}
                 {order.address.district} {order.address.detail}
               </p>
             </div>

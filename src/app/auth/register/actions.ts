@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { JWT_SECRET } from "@/lib/env";
+import { JWT_SECRET, MOCK_CAPTCHA } from "@/lib/env";
 import { z } from "zod";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
@@ -19,6 +19,7 @@ const registerSchema = z
       .min(6, "密码长度不能小于6个字符")
       .max(100, "密码长度不能超过100个字符"),
     confirmPassword: z.string(),
+    captcha: z.string().min(1, "请输入验证码"),
     role: z.enum(["BUYER", "SELLER"], {
       required_error: "请选择用户类型",
     }),
@@ -26,6 +27,10 @@ const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "两次输入的密码不一致",
     path: ["confirmPassword"],
+  })
+  .refine((data) => data.captcha === MOCK_CAPTCHA, {
+    message: "验证码不正确",
+    path: ["captcha"],
   });
 
 type RegisterResult = {
@@ -39,6 +44,7 @@ export const register = async (formData: FormData): Promise<RegisterResult> => {
       username: formData.get("username") as string,
       password: formData.get("password") as string,
       confirmPassword: formData.get("confirmPassword") as string,
+      captcha: formData.get("captcha") as string,
       role: formData.get("role") as "BUYER" | "SELLER",
     };
 

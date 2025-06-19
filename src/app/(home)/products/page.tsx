@@ -223,7 +223,7 @@ export default function ProductsPage() {
       <section>
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-2xl font-bold text-foreground">
-            全部商品{" "}
+            全部商品
             {!isLoading && products.length > 0 && `(共 ${products.length} 件)`}
           </h2>
         </div>

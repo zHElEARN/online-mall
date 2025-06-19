@@ -126,12 +126,26 @@ export default function CartPage() {
 
     try {
       setIsCheckingOut(true);
-      await createPendingOrdersFromCart();
-      toast.success("订单创建成功，请选择支付方式");
-      router.push("/confirm");
+      const result = await createPendingOrdersFromCart();
+
+      if (result.success) {
+        toast.success("订单创建成功，请选择支付方式");
+        router.push("/confirm");
+      } else {
+        if (result.needAddress) {
+          toast.error(result.error, {
+            action: {
+              label: "去添加",
+              onClick: () => router.push("/my/addresses"),
+            },
+          });
+        } else {
+          toast.error(result.error);
+        }
+      }
     } catch (error) {
       console.error("创建订单失败:", error);
-      toast.error("创建订单失败");
+      toast.error("创建订单失败，请稍后重试");
     } finally {
       setIsCheckingOut(false);
     }
@@ -202,7 +216,7 @@ export default function CartPage() {
               return (
                 <Card key={item.id} className={isUpdating ? "opacity-60" : ""}>
                   <CardContent className="p-4">
-                    {" "}
+                    
                     <div className="flex gap-6">
                       <div className="flex-1 flex gap-4">
                         <Link

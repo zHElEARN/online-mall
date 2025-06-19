@@ -20,11 +20,28 @@ import { register } from "./actions";
 export default function RegisterPage() {
   const [pending, setPending] = useState(false);
   const [role, setRole] = useState<"BUYER" | "SELLER">("BUYER");
+  const [captcha, setCaptcha] = useState("");
+  const [captchaSent, setCaptchaSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     document.title = "注册 | 在线商城";
   }, []);
+
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [countdown]);
+
+  const sendCaptcha = async () => {
+    setCaptchaSent(true);
+    setCountdown(60);
+    // 模拟发送验证码
+    toast.success("验证码已发送！");
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -33,6 +50,7 @@ export default function RegisterPage() {
     try {
       const formData = new FormData(e.currentTarget);
       formData.set("role", role);
+      formData.set("captcha", captcha);
 
       const result = await register(formData);
 
@@ -110,6 +128,33 @@ export default function RegisterPage() {
                   placeholder="请再次输入密码"
                   required
                 />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="captcha">验证码</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="captcha"
+                    name="captcha"
+                    type="text"
+                    placeholder="请输入验证码"
+                    value={captcha}
+                    onChange={(e) => setCaptcha(e.target.value)}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={sendCaptcha}
+                    disabled={countdown > 0}
+                    className="whitespace-nowrap"
+                  >
+                    {countdown > 0
+                      ? `${countdown}s`
+                      : captchaSent
+                      ? "重新发送"
+                      : "发送验证码"}
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-col gap-3">
                 <Button type="submit" className="w-full" disabled={pending}>
