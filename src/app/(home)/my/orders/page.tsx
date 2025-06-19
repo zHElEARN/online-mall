@@ -23,6 +23,7 @@ import {
   User,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -103,7 +104,7 @@ export default function OrdersPage() {
       } else {
         toast.error(result.error || "获取订单失败");
       }
-    } catch (err) {
+    } catch {
       toast.error("获取订单列表失败");
     } finally {
       setLoading(false);
@@ -120,7 +121,7 @@ export default function OrdersPage() {
       } else {
         toast.error(result.error || "确认收货失败");
       }
-    } catch (err) {
+    } catch {
       toast.error("确认收货失败");
     } finally {
       setConfirmingOrderId(null);
@@ -141,7 +142,7 @@ export default function OrdersPage() {
       } else {
         toast.error(result.error || "取消订单失败");
       }
-    } catch (err) {
+    } catch {
       toast.error("取消订单失败");
     } finally {
       setCancelingOrderId(null);
@@ -180,7 +181,7 @@ export default function OrdersPage() {
       } else {
         toast.error(result.error || "评价提交失败");
       }
-    } catch (err) {
+    } catch {
       toast.error("评价提交失败");
     } finally {
       setSubmittingReview(false);
@@ -210,7 +211,6 @@ export default function OrdersPage() {
         const images = JSON.parse(order.product.images);
         const firstImage = Array.isArray(images) ? images[0] : images;
         const hasReview = order.product.reviews.length > 0;
-        const review = hasReview ? order.product.reviews[0] : null;
 
         return (
           <Card key={order.id}>
@@ -232,9 +232,11 @@ export default function OrdersPage() {
                   className="w-20 h-20 bg-muted rounded overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity"
                 >
                   {firstImage && (
-                    <img
+                    <Image
                       src={firstImage}
                       alt={order.product.name}
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover"
                     />
                   )}
@@ -384,9 +386,11 @@ export default function OrdersPage() {
                       ? images[0]
                       : images;
                     return firstImage ? (
-                      <img
+                      <Image
                         src={firstImage}
                         alt={reviewingOrder.product.name}
+                        width={48}
+                        height={48}
                         className="w-full h-full object-cover"
                       />
                     ) : null;

@@ -54,10 +54,14 @@ function ProductCard({ product }: { product: Product }) {
     e.preventDefault(); // 防止触发 Link 跳转
     setIsLoading(true);
     try {
-      await addToCart(product.id, 1);
-      toast.success("商品已加入购物车");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "加入购物车失败");
+      const result = await addToCart(product.id, 1);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("加入购物车失败，请稍后重试");
     } finally {
       setIsLoading(false);
     }

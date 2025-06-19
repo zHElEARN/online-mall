@@ -60,8 +60,26 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/my/orders", request.url));
   }
 
+  // 保护管理后台路由 - 仅认证的卖家可访问
   if (pathname.startsWith("/manage") && !isAuthenticated) {
     actionDescription = `拒绝访问 ${pathname} (用户未认证)。重定向到登录页。`;
+    logMiddlewareAction(pathname, isAuthenticated, role, actionDescription);
+    return NextResponse.redirect(new URL("/auth/login", request.url));
+  }
+
+  // 保护买家专用路由 - 仅认证的买家可访问
+  if (
+    (pathname.startsWith("/my") ||
+      pathname.startsWith("/profile") ||
+      pathname.startsWith("/confirm") ||
+      pathname.startsWith("/cart")) &&
+    (!isAuthenticated || role !== "buyer")
+  ) {
+    if (!isAuthenticated) {
+      actionDescription = `拒绝访问 ${pathname} (用户未认证)。重定向到登录页。`;
+    } else {
+      actionDescription = `拒绝访问 ${pathname} (用户角色: ${role}，需要买家权限)。重定向到登录页。`;
+    }
     logMiddlewareAction(pathname, isAuthenticated, role, actionDescription);
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
@@ -95,5 +113,13 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config: MiddlewareConfig = {
-  matcher: ["/", "/auth/:path*", "/manage/:path*", "/my/:path*"],
+  matcher: [
+    "/",
+    "/auth/:path*",
+    "/manage/:path*",
+    "/my/:path*",
+    "/profile/:path*",
+    "/confirm/:path*",
+    "/cart/:path*",
+  ],
 };

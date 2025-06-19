@@ -78,7 +78,7 @@ export default function AddressesPage() {
       } else {
         toast.error(result.error || "获取地址失败");
       }
-    } catch (err) {
+    } catch {
       toast.error("获取地址列表失败");
     } finally {
       setLoading(false);
@@ -193,7 +193,7 @@ export default function AddressesPage() {
           toast.error(result.error || "创建失败");
         }
       }
-    } catch (error) {
+    } catch {
       toast.error(editingAddress ? "更新地址失败" : "创建地址失败");
     } finally {
       setSubmitting(false);
@@ -220,7 +220,7 @@ export default function AddressesPage() {
       } else {
         toast.error(result.error || "删除失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("删除地址失败");
     } finally {
       setDeletingAddress(null);
@@ -244,7 +244,7 @@ export default function AddressesPage() {
       } else {
         toast.error(result.error || "设置默认地址失败");
       }
-    } catch (error) {
+    } catch {
       toast.error("设置默认地址失败");
     }
   };

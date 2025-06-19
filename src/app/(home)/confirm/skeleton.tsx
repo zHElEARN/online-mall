@@ -142,7 +142,7 @@ export default function ConfirmSkeleton() {
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
-                点击"提交订单"表示您同意相关服务条款
+                点击&ldquo;提交订单&rdquo;表示您同意相关服务条款
               </p>
             </CardContent>
           </Card>

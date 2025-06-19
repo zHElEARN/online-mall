@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Edit, Star, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -59,7 +60,7 @@ export default function ReviewsPage() {
         } else {
           toast.error(result.error || "获取评论失败");
         }
-      } catch (err) {
+      } catch {
         toast.error("获取评论列表失败");
       } finally {
         setLoading(false);
@@ -80,7 +81,7 @@ export default function ReviewsPage() {
       } else {
         toast.error(result.error || "删除评论失败");
       }
-    } catch (err) {
+    } catch {
       toast.error("删除评论失败");
     } finally {
       setDeletingId(null);
@@ -119,7 +120,7 @@ export default function ReviewsPage() {
       } else {
         toast.error(result.error || "更新评论失败");
       }
-    } catch (err) {
+    } catch {
       toast.error("更新评论失败");
     } finally {
       setIsUpdating(false);
@@ -155,9 +156,11 @@ export default function ReviewsPage() {
                     className="w-16 h-16 bg-muted rounded overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity"
                   >
                     {firstImage && (
-                      <img
+                      <Image
                         src={firstImage}
                         alt={review.product.name}
+                        width={64}
+                        height={64}
                         className="w-full h-full object-cover"
                       />
                     )}
@@ -275,9 +278,11 @@ export default function ReviewsPage() {
                       ? images[0]
                       : images;
                     return firstImage ? (
-                      <img
+                      <Image
                         src={firstImage}
                         alt={editingReview.product.name}
+                        width={48}
+                        height={48}
                         className="w-full h-full object-cover"
                       />
                     ) : null;

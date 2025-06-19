@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/prisma";
 import { getAuthStatus } from "../actions";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 export async function getPendingOrders() {
   try {

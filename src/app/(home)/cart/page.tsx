@@ -128,9 +128,9 @@ export default function CartPage() {
       await createPendingOrdersFromCart();
       toast.success("订单创建成功，请选择支付方式");
       router.push("/confirm");
-    } catch (error: any) {
+    } catch (error) {
       console.error("创建订单失败:", error);
-      toast.error(error.message || "创建订单失败");
+      toast.error("创建订单失败");
     } finally {
       setIsCheckingOut(false);
     }

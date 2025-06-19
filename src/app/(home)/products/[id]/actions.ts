@@ -70,7 +70,7 @@ export async function addToCart(productId: string, quantity: number = 1) {
     const authStatus = await getAuthStatus();
 
     if (!authStatus.isAuthenticated || !authStatus.user) {
-      throw new Error("请先登录");
+      return { success: false, message: "请先登录" };
     }
 
     const product = await prisma.product.findUnique({
@@ -81,11 +81,11 @@ export async function addToCart(productId: string, quantity: number = 1) {
     });
 
     if (!product) {
-      throw new Error("商品不存在或已下架");
+      return { success: false, message: "商品不存在或已下架" };
     }
 
     if (product.stock < quantity) {
-      throw new Error("库存不足");
+      return { success: false, message: "库存不足" };
     }
 
     const existingCartItem = await prisma.cart.findUnique({
@@ -101,7 +101,7 @@ export async function addToCart(productId: string, quantity: number = 1) {
       const newQuantity = existingCartItem.quantity + quantity;
 
       if (newQuantity > product.stock) {
-        throw new Error("加入数量超过库存限制");
+        return { success: false, message: "加入数量超过库存限制" };
       }
 
       await prisma.cart.update({
@@ -126,7 +126,7 @@ export async function addToCart(productId: string, quantity: number = 1) {
     return { success: true, message: "已加入购物车" };
   } catch (error) {
     console.error("加入购物车失败:", error);
-    throw error;
+    return { success: false, message: "加入购物车失败，请稍后重试" };
   }
 }
 
@@ -154,7 +154,10 @@ export async function checkProductInCart(productId: string) {
   }
 }
 
-export async function getRelatedProducts(productId: string, category?: string | null) {
+export async function getRelatedProducts(
+  productId: string,
+  category?: string | null
+) {
   try {
     const products = await prisma.product.findMany({
       where: {
@@ -176,10 +179,7 @@ export async function getRelatedProducts(productId: string, category?: string | 
           },
         },
       },
-      orderBy: [
-        { salesCount: "desc" },
-        { createdAt: "desc" },
-      ],
+      orderBy: [{ salesCount: "desc" }, { createdAt: "desc" }],
       take: 4,
     });
 

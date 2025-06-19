@@ -17,7 +17,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   calculateTotalPrice,
@@ -76,11 +76,7 @@ export default function ConfirmPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [orders, userAddresses, total] = await Promise.all([
@@ -118,8 +114,11 @@ export default function ConfirmPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [router]);
 
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
   const handleSubmitOrder = async () => {
     if (!selectedAddressId) {
       toast.error("请选择收货地址");
@@ -131,9 +130,9 @@ export default function ConfirmPage() {
       await payPendingOrders(selectedAddressId, paymentMethod);
       toast.success("支付成功！");
       router.push("/my/orders");
-    } catch (error: any) {
+    } catch (error) {
       console.error("支付失败:", error);
-      toast.error(error.message || "支付失败");
+      toast.error("支付失败");
     } finally {
       setIsSubmitting(false);
     }
@@ -357,7 +356,7 @@ export default function ConfirmPage() {
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
-                点击"提交订单"表示您同意相关服务条款
+                点击&ldquo;提交订单&rdquo;表示您同意相关服务条款
               </p>
             </CardContent>
           </Card>
