@@ -23,6 +23,7 @@ import {
   User,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -226,7 +227,10 @@ export default function OrdersPage() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-4">
-                <div className="w-20 h-20 bg-muted rounded overflow-hidden flex-shrink-0">
+                <Link
+                  href={`/products/${order.product.id}`}
+                  className="w-20 h-20 bg-muted rounded overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity"
+                >
                   {firstImage && (
                     <img
                       src={firstImage}
@@ -234,12 +238,17 @@ export default function OrdersPage() {
                       className="w-full h-full object-cover"
                     />
                   )}
-                </div>
+                </Link>
 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium truncate mb-1">
-                    {order.product.name}
-                  </h3>
+                  <Link
+                    href={`/products/${order.product.id}`}
+                    className="hover:text-primary transition-colors"
+                  >
+                    <h3 className="font-medium truncate mb-1">
+                      {order.product.name}
+                    </h3>
+                  </Link>
                   <div className="flex items-center gap-2 mb-2">
                     <Store className="h-3 w-3 text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">
@@ -365,7 +374,10 @@ export default function OrdersPage() {
             <div className="space-y-4">
               {/* 商品信息 */}
               <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                <Link
+                  href={`/products/${reviewingOrder.product.id}`}
+                  className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity"
+                >
                   {(() => {
                     const images = JSON.parse(reviewingOrder.product.images);
                     const firstImage = Array.isArray(images)
@@ -379,11 +391,16 @@ export default function OrdersPage() {
                       />
                     ) : null;
                   })()}
-                </div>
+                </Link>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium truncate">
-                    {reviewingOrder.product.name}
-                  </h4>
+                  <Link
+                    href={`/products/${reviewingOrder.product.id}`}
+                    className="hover:text-primary transition-colors"
+                  >
+                    <h4 className="text-sm font-medium truncate">
+                      {reviewingOrder.product.name}
+                    </h4>
+                  </Link>
                   <p className="text-xs text-muted-foreground">
                     ¥{reviewingOrder.totalPrice.toFixed(2)}
                   </p>

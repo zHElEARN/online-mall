@@ -201,21 +201,30 @@ export default function CartPage() {
               return (
                 <Card key={item.id} className={isUpdating ? "opacity-60" : ""}>
                   <CardContent className="p-4">
+                    {" "}
                     <div className="flex gap-6">
                       <div className="flex-1 flex gap-4">
-                        <div className="relative w-20 h-20 rounded-lg overflow-hidden">
+                        <Link
+                          href={`/products/${item.product.id}`}
+                          className="relative w-20 h-20 rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
+                        >
                           <Image
                             src={images[0]}
                             alt={item.product.name}
                             fill
                             className="object-cover"
                           />
-                        </div>
+                        </Link>
 
                         <div className="flex-1">
-                          <h3 className="font-medium mb-1 line-clamp-2">
-                            {item.product.name}
-                          </h3>
+                          <Link
+                            href={`/products/${item.product.id}`}
+                            className="hover:text-primary transition-colors"
+                          >
+                            <h3 className="font-medium mb-1 line-clamp-2">
+                              {item.product.name}
+                            </h3>
+                          </Link>
                           <p className="text-sm text-muted-foreground mb-3">
                             卖家: {item.product.seller.username}
                           </p>

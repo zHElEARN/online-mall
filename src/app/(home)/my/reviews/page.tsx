@@ -18,10 +18,11 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Edit, Star, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deleteReview, getUserReviews, updateReview } from "./actions";
@@ -33,6 +34,7 @@ interface Review {
   comment: string | null;
   createdAt: Date;
   product: {
+    id: string;
     name: string;
     images: string;
   };
@@ -97,7 +99,11 @@ export default function ReviewsPage() {
 
     setIsUpdating(true);
     try {
-      const result = await updateReview(editingReview.id, editRating, editComment);
+      const result = await updateReview(
+        editingReview.id,
+        editRating,
+        editComment
+      );
       if (result.success) {
         toast.success("评论更新成功");
         // 更新本地状态中的评论
@@ -144,7 +150,10 @@ export default function ReviewsPage() {
             <Card key={review.id}>
               <CardContent className="p-4">
                 <div className="flex gap-4">
-                  <div className="w-16 h-16 bg-muted rounded overflow-hidden flex-shrink-0">
+                  <Link
+                    href={`/products/${review.product.id}`}
+                    className="w-16 h-16 bg-muted rounded overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity"
+                  >
                     {firstImage && (
                       <img
                         src={firstImage}
@@ -152,11 +161,18 @@ export default function ReviewsPage() {
                         className="w-full h-full object-cover"
                       />
                     )}
-                  </div>
+                  </Link>
 
                   <div className="flex-1">
                     <div className="flex items-start justify-between">
-                      <h3 className="font-medium mb-2">{review.product.name}</h3>
+                      <Link
+                        href={`/products/${review.product.id}`}
+                        className="hover:text-primary transition-colors"
+                      >
+                        <h3 className="font-medium mb-2">
+                          {review.product.name}
+                        </h3>
+                      </Link>
 
                       <div className="flex gap-2">
                         {/* 编辑按钮 */}
@@ -244,15 +260,20 @@ export default function ReviewsPage() {
           <DialogHeader>
             <DialogTitle>编辑评价</DialogTitle>
           </DialogHeader>
-          
+
           {editingReview && (
             <div className="space-y-4">
               {/* 商品信息 */}
               <div className="flex gap-3 items-center">
-                <div className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0">
+                <Link
+                  href={`/products/${editingReview.product.id}`}
+                  className="w-12 h-12 bg-muted rounded overflow-hidden flex-shrink-0 hover:opacity-80 transition-opacity"
+                >
                   {(() => {
                     const images = JSON.parse(editingReview.product.images);
-                    const firstImage = Array.isArray(images) ? images[0] : images;
+                    const firstImage = Array.isArray(images)
+                      ? images[0]
+                      : images;
                     return firstImage ? (
                       <img
                         src={firstImage}
@@ -261,8 +282,15 @@ export default function ReviewsPage() {
                       />
                     ) : null;
                   })()}
-                </div>
-                <h4 className="font-medium text-sm">{editingReview.product.name}</h4>
+                </Link>
+                <Link
+                  href={`/products/${editingReview.product.id}`}
+                  className="hover:text-primary transition-colors"
+                >
+                  <h4 className="font-medium text-sm">
+                    {editingReview.product.name}
+                  </h4>
+                </Link>
               </div>
 
               {/* 评分选择 */}
@@ -309,7 +337,7 @@ export default function ReviewsPage() {
             >
               取消
             </Button>
-            <Button 
+            <Button
               onClick={handleUpdateReview}
               disabled={isUpdating || editRating === 0}
             >
