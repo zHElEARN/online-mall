@@ -54,6 +54,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/manage", request.url));
   }
 
+  if (role === "buyer" && pathname === "/my") {
+    actionDescription = `买家用户从 ${pathname} 重定向到 /my/orders`;
+    logMiddlewareAction(pathname, isAuthenticated, role, actionDescription);
+    return NextResponse.redirect(new URL("/my/orders", request.url));
+  }
+
   if (pathname.startsWith("/manage") && !isAuthenticated) {
     actionDescription = `拒绝访问 ${pathname} (用户未认证)。重定向到登录页。`;
     logMiddlewareAction(pathname, isAuthenticated, role, actionDescription);
@@ -89,5 +95,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config: MiddlewareConfig = {
-  matcher: ["/", "/auth/:path*", "/manage/:path*"],
+  matcher: ["/", "/auth/:path*", "/manage/:path*", "/my/:path*"],
 };

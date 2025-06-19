@@ -79,3 +79,95 @@ export const getUserReviews = async () => {
     return { success: false, error: "获取评论失败" };
   }
 };
+
+export const deleteReview = async (reviewId: string) => {
+  try {
+    const userResult = await getCurrentUser();
+
+    if (!userResult.success || !userResult.user) {
+      return { success: false, error: userResult.error || "用户未登录" };
+    }
+
+    // 检查评论是否存在且属于当前用户
+    const review = await prisma.review.findFirst({
+      where: {
+        id: reviewId,
+        userId: userResult.user.id,
+      },
+    });
+
+    if (!review) {
+      return { success: false, error: "评论不存在或无权限删除" };
+    }
+
+    // 删除评论
+    await prisma.review.delete({
+      where: {
+        id: reviewId,
+      },
+    });
+
+    return { success: true, message: "评论删除成功" };
+  } catch (error) {
+    console.error("删除评论失败:", error);
+    return { success: false, error: "删除评论失败" };
+  }
+};
+
+export const updateReview = async (
+  reviewId: string,
+  rating: number,
+  comment: string
+) => {
+  try {
+    const userResult = await getCurrentUser();
+
+    if (!userResult.success || !userResult.user) {
+      return { success: false, error: userResult.error || "用户未登录" };
+    }
+
+    // 检查评论是否存在且属于当前用户
+    const existingReview = await prisma.review.findFirst({
+      where: {
+        id: reviewId,
+        userId: userResult.user.id,
+      },
+    });
+
+    if (!existingReview) {
+      return { success: false, error: "评论不存在或无权限编辑" };
+    }
+
+    // 验证评分范围
+    if (rating < 1 || rating > 5) {
+      return { success: false, error: "评分必须在1-5之间" };
+    }
+
+    // 更新评论
+    const updatedReview = await prisma.review.update({
+      where: {
+        id: reviewId,
+      },
+      data: {
+        rating,
+        comment: comment.trim() || null,
+        updatedAt: new Date(),
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            images: true,
+          },
+        },
+      },
+    });
+
+    return { success: true, review: updatedReview, message: "评论更新成功" };
+  } catch (error) {
+    console.error("更新评论失败:", error);
+    return { success: false, error: "更新评论失败" };
+  }
+};
