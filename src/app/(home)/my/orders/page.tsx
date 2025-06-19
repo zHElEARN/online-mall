@@ -96,6 +96,10 @@ export default function OrdersPage() {
   const [reviewComment, setReviewComment] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
 
+  useEffect(() => {
+    document.title = "我的订单 | 在线商城";
+  }, []);
+
   const fetchOrders = async () => {
     try {
       const result = await getBuyerOrders();

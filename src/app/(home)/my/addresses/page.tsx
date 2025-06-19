@@ -66,6 +66,7 @@ export default function AddressesPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    document.title = "收货地址 | 在线商城";
     fetchAddresses();
   }, []);
 

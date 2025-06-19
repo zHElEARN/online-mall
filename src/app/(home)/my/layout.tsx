@@ -12,7 +12,7 @@ export default function MyLayout({
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("orders");
 
-  // 根据当前路径设置激活的 tab
+  // 根据当前路径设置激活的 tab 和页面标题
   useEffect(() => {
     if (pathname.includes("/my/orders")) {
       setActiveTab("orders");

@@ -5,7 +5,16 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import type { Metadata } from "next";
 import { AppSidebar } from "./app-sidebar";
+
+export const metadata: Metadata = {
+  title: {
+    default: "管理后台",
+    template: "%s | 管理后台",
+  },
+  description: "商城管理后台，管理商品、订单和设置",
+};
 
 export default function ManageLayout({
   children,

@@ -187,6 +187,8 @@ export default function ProductsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "商品列表 | 在线商城";
+    
     const loadProducts = async () => {
       try {
         const data = await getAllProducts();

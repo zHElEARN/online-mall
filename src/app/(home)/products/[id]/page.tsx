@@ -336,6 +336,7 @@ export default function ProductDetailPage() {
         }
 
         setProduct(productData);
+        document.title = `${productData.name} | 在线商城`;
         setReviews(reviewsData);
         setAverageRating(averageRatingData);
 

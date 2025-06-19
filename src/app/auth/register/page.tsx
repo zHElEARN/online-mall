@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { register } from "./actions";
 
@@ -21,6 +21,10 @@ export default function RegisterPage() {
   const [pending, setPending] = useState(false);
   const [role, setRole] = useState<"BUYER" | "SELLER">("BUYER");
   const router = useRouter();
+
+  useEffect(() => {
+    document.title = "注册 | 在线商城";
+  }, []);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

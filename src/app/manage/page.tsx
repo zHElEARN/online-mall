@@ -2,25 +2,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
 import {
-  AlertTriangle,
-  DollarSign,
-  Package,
-  Plus,
-  ShoppingCart,
-  TrendingUp,
-  Users,
-  Warehouse,
+    AlertTriangle,
+    DollarSign,
+    Package,
+    Plus,
+    ShoppingCart,
+    TrendingUp,
+    Users,
+    Warehouse,
 } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getDashboardStats, getRecentOrders } from "./actions";
+
+export const metadata: Metadata = {
+  title: "仪表板",
+  description: "查看商店概况和重要数据",
+};
 
 export const dynamic = "force-dynamic";
 

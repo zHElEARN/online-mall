@@ -214,6 +214,8 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "设置 | 管理后台";
+    
     const fetchUser = async () => {
       try {
         const result = await getCurrentUser();

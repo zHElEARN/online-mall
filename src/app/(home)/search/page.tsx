@@ -253,6 +253,14 @@ function SearchPageContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q")?.trim();
 
+  useEffect(() => {
+    if (query) {
+      document.title = `搜索"${query}" | 在线商城`;
+    } else {
+      document.title = "搜索商品 | 在线商城";
+    }
+  }, [query]);
+
   if (!query) {
     return (
       <div className="h-[calc(100vh-5rem)] flex items-center justify-center bg-background">

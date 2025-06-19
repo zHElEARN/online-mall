@@ -52,6 +52,8 @@ export default function ReviewsPage() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
+    document.title = "我的评价 | 在线商城";
+    
     async function fetchReviews() {
       try {
         const result = await getUserReviews();

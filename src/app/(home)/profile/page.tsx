@@ -216,6 +216,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    document.title = "个人资料 | 在线商城";
+    
     const fetchUser = async () => {
       try {
         const result = await getCurrentUser();

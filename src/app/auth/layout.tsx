@@ -1,5 +1,14 @@
 import { ModeToggle } from "@/components/theme-toggle";
 import { CreditCard, ShoppingBag, Star, Truck } from "lucide-react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    default: "用户认证",
+    template: "%s | 在线商城",
+  },
+  description: "登录或注册账户，开始您的购物之旅",
+};
 
 export default function AuthLayout({
   children,

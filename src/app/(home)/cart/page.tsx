@@ -40,6 +40,7 @@ export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
+    document.title = "购物车 | 在线商城";
     loadCartItems();
   }, []);
 

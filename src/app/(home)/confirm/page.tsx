@@ -76,6 +76,10 @@ export default function ConfirmPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    document.title = "确认订单 | 在线商城";
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
