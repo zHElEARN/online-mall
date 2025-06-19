@@ -62,7 +62,15 @@ export const getBuyerOrders = async () => {
       where: {
         buyerId: userResult.user.id,
       },
-      include: {
+      select: {
+        id: true,
+        quantity: true,
+        totalPrice: true,
+        status: true,
+        note: true,
+        trackingNumber: true,
+        createdAt: true,
+        updatedAt: true,
         product: {
           select: {
             id: true,
@@ -155,51 +163,6 @@ export const confirmOrder = async (orderId: string) => {
   } catch (error) {
     console.error("确认收货失败:", error);
     return { success: false, error: "确认收货失败" };
-  }
-};
-
-export const payOrder = async (orderId: string) => {
-  try {
-    const userResult = await getCurrentUser();
-
-    if (!userResult.success || !userResult.user) {
-      return { success: false, error: userResult.error || "用户未登录" };
-    }
-
-    if (userResult.user.role !== "BUYER") {
-      return { success: false, error: "只有买家可以支付订单" };
-    }
-
-    // 检查订单是否存在且属于当前用户
-    const order = await prisma.order.findFirst({
-      where: {
-        id: orderId,
-        buyerId: userResult.user.id,
-      },
-    });
-
-    if (!order) {
-      return { success: false, error: "订单不存在" };
-    }
-
-    if (order.status !== "PENDING") {
-      return { success: false, error: "只有待支付的订单可以支付" };
-    }
-
-    // 更新订单状态为已支付
-    await prisma.order.update({
-      where: {
-        id: orderId,
-      },
-      data: {
-        status: "PAID",
-      },
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("支付失败:", error);
-    return { success: false, error: "支付失败" };
   }
 };
 

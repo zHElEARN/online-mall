@@ -5,10 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   clearCart,
+  createPendingOrdersFromCart,
   getCartItems,
   removeCartItem,
   updateCartItemQuantity,
@@ -31,9 +33,11 @@ type CartItem = {
 };
 
 export default function CartPage() {
+  const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   useEffect(() => {
     loadCartItems();
@@ -110,6 +114,25 @@ export default function CartPage() {
     } catch (error) {
       console.error("清空购物车失败:", error);
       toast.error("清空购物车失败");
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0) {
+      toast.error("购物车为空");
+      return;
+    }
+
+    try {
+      setIsCheckingOut(true);
+      await createPendingOrdersFromCart();
+      toast.success("订单创建成功，请选择支付方式");
+      router.push("/confirm");
+    } catch (error: any) {
+      console.error("创建订单失败:", error);
+      toast.error(error.message || "创建订单失败");
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -286,12 +309,10 @@ export default function CartPage() {
                   <Button
                     className="w-full"
                     size="lg"
-                    disabled={cartItems.length === 0}
-                    onClick={() => {
-                      toast.info("结算功能正在开发中...");
-                    }}
+                    disabled={cartItems.length === 0 || isCheckingOut}
+                    onClick={handleCheckout}
                   >
-                    去结算
+                    {isCheckingOut ? "创建订单中..." : "去结算"}
                   </Button>
                 </div>
               </CardContent>

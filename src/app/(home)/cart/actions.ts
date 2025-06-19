@@ -113,3 +113,80 @@ export async function clearCart() {
     throw error;
   }
 }
+
+export async function createPendingOrdersFromCart() {
+  try {
+    const authStatus = await getAuthStatus();
+
+    if (!authStatus.isAuthenticated || !authStatus.user) {
+      throw new Error("未登录");
+    }
+
+    // 获取购物车商品
+    const cartItems = await prisma.cart.findMany({
+      where: {
+        userId: authStatus.user.id,
+      },
+      include: {
+        product: true,
+      },
+    });
+
+    if (cartItems.length === 0) {
+      throw new Error("购物车为空");
+    }
+
+    // 检查库存
+    for (const item of cartItems) {
+      if (item.product.stock < item.quantity) {
+        throw new Error(`商品 ${item.product.name} 库存不足`);
+      }
+    }
+
+    // 获取用户的默认地址，如果没有默认地址就用第一个地址
+    const defaultAddress = await prisma.address.findFirst({
+      where: {
+        userId: authStatus.user.id,
+      },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+    });
+
+    if (!defaultAddress) {
+      throw new Error("请先添加收货地址");
+    }
+
+    // 创建待支付订单并清空购物车
+    await prisma.$transaction(async (tx) => {
+      // 创建待支付订单
+      await Promise.all(
+        cartItems.map((item) =>
+          tx.order.create({
+            data: {
+              buyerId: authStatus.user!.id,
+              productId: item.productId,
+              addressId: defaultAddress.id,
+              quantity: item.quantity,
+              totalPrice: item.product.price * item.quantity,
+              status: "PENDING", // 待支付状态
+            },
+          })
+        )
+      );
+
+      // 清空购物车
+      await tx.cart.deleteMany({
+        where: {
+          userId: authStatus.user!.id,
+        },
+      });
+    });
+
+    revalidatePath("/cart");
+    revalidatePath("/confirm");
+
+    return { success: true };
+  } catch (error) {
+    console.error("创建待支付订单失败:", error);
+    throw error;
+  }
+}

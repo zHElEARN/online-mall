@@ -19,9 +19,11 @@ import {
   Package,
   Star,
   Store,
+  Truck,
   User,
   X,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -29,7 +31,6 @@ import {
   confirmOrder,
   createReview,
   getBuyerOrders,
-  payOrder,
 } from "./actions";
 import { OrderListSkeleton } from "./skeleton";
 
@@ -38,6 +39,7 @@ interface Order {
   status: string;
   quantity: number;
   totalPrice: number;
+  trackingNumber: string | null;
   createdAt: Date;
   product: {
     id: string;
@@ -77,12 +79,12 @@ function OrderStatusBadge({ status }: { status: string }) {
 }
 
 export default function OrdersPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(
     null
   );
-  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [cancelingOrderId, setCancelingOrderId] = useState<string | null>(null);
 
   // 评价相关状态
@@ -124,21 +126,8 @@ export default function OrdersPage() {
     }
   };
 
-  const handlePayOrder = async (orderId: string) => {
-    setPayingOrderId(orderId);
-    try {
-      const result = await payOrder(orderId);
-      if (result.success) {
-        toast.success("支付成功");
-        await fetchOrders(); // 重新获取订单列表
-      } else {
-        toast.error(result.error || "支付失败");
-      }
-    } catch (err) {
-      toast.error("支付失败");
-    } finally {
-      setPayingOrderId(null);
-    }
+  const handlePayOrder = () => {
+    router.push("/confirm");
   };
 
   const handleCancelOrder = async (orderId: string) => {
@@ -272,6 +261,16 @@ export default function OrdersPage() {
                       <User className="h-3 w-3" />
                       <span>{order.address.receiverName}</span>
                     </div>
+
+                    {/* 快递单号 */}
+                    {order.trackingNumber && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Truck className="h-3 w-3" />
+                        <span className="text-xs">
+                          快递单号: {order.trackingNumber}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -281,11 +280,10 @@ export default function OrdersPage() {
                       <Button
                         variant="default"
                         size="sm"
-                        onClick={() => handlePayOrder(order.id)}
-                        disabled={payingOrderId === order.id}
+                        onClick={handlePayOrder}
                       >
                         <CreditCard className="h-3 w-3 mr-1" />
-                        {payingOrderId === order.id ? "支付中..." : "立即支付"}
+                        立即支付
                       </Button>
                       <Button
                         variant="outline"
