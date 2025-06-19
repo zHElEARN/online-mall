@@ -18,7 +18,7 @@ interface Review {
   };
 }
 
-export default function ReviewList() {
+export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 

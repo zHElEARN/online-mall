@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Phone, Plus, User } from "lucide-react";
+import { Edit, MapPin, Phone, Plus, Trash2, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -46,7 +46,7 @@ interface Address {
   isDefault: boolean;
 }
 
-export default function AddressList() {
+export default function AddressesPage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -274,13 +274,13 @@ export default function AddressList() {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>
-                {editingAddress ? "编辑地址" : "新建地址"}
+                {editingAddress ? "编辑地址" : "添加地址"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="receiverName">收货人姓名 *</Label>
+                  <Label htmlFor="receiverName">收货人姓名</Label>
                   <Input
                     id="receiverName"
                     value={formData.receiverName}
@@ -291,7 +291,7 @@ export default function AddressList() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">手机号 *</Label>
+                  <Label htmlFor="phone">手机号</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
@@ -305,7 +305,7 @@ export default function AddressList() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="province">省份 *</Label>
+                  <Label htmlFor="province">省份</Label>
                   <Input
                     id="province"
                     value={formData.province}
@@ -316,7 +316,7 @@ export default function AddressList() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="city">城市 *</Label>
+                  <Label htmlFor="city">城市</Label>
                   <Input
                     id="city"
                     value={formData.city}
@@ -327,7 +327,7 @@ export default function AddressList() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="district">区县 *</Label>
+                  <Label htmlFor="district">区县</Label>
                   <Input
                     id="district"
                     value={formData.district}
@@ -340,7 +340,7 @@ export default function AddressList() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="detail">详细地址 *</Label>
+                <Label htmlFor="detail">详细地址</Label>
                 <Textarea
                   id="detail"
                   value={formData.detail}
@@ -367,7 +367,10 @@ export default function AddressList() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowAddressForm(false)}
+                  onClick={() => {
+                    setShowAddressForm(false);
+                    setEditingAddress(null);
+                  }}
                   disabled={submitting}
                 >
                   取消
@@ -402,19 +405,19 @@ export default function AddressList() {
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">{address.receiverName}</span>
                   <Phone className="h-4 w-4 text-muted-foreground ml-4" />
-                  <span className="text-sm">{address.phone}</span>
+                  <span className="text-muted-foreground">{address.phone}</span>
                   {address.isDefault && (
-                    <Badge variant="secondary" className="ml-2">
+                    <Badge variant="default" className="ml-2">
                       默认
                     </Badge>
                   )}
                 </div>
                 <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <p className="text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <span className="text-sm">
                     {address.province} {address.city} {address.district}{" "}
                     {address.detail}
-                  </p>
+                  </span>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -432,7 +435,7 @@ export default function AddressList() {
                   size="sm"
                   onClick={() => handleEdit(address)}
                 >
-                  编辑
+                  <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="outline"
@@ -440,7 +443,7 @@ export default function AddressList() {
                   onClick={() => handleDelete(address.id)}
                   disabled={deletingAddress === address.id}
                 >
-                  {deletingAddress === address.id ? "删除中..." : "删除"}
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -452,13 +455,13 @@ export default function AddressList() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {editingAddress ? "编辑地址" : "新建地址"}
+              {editingAddress ? "编辑地址" : "添加地址"}
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleFormSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="receiverName">收货人姓名 *</Label>
+                <Label htmlFor="receiverName">收货人姓名</Label>
                 <Input
                   id="receiverName"
                   value={formData.receiverName}
@@ -469,7 +472,7 @@ export default function AddressList() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">手机号 *</Label>
+                <Label htmlFor="phone">手机号</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
@@ -483,7 +486,7 @@ export default function AddressList() {
 
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="province">省份 *</Label>
+                <Label htmlFor="province">省份</Label>
                 <Input
                   id="province"
                   value={formData.province}
@@ -494,7 +497,7 @@ export default function AddressList() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="city">城市 *</Label>
+                <Label htmlFor="city">城市</Label>
                 <Input
                   id="city"
                   value={formData.city}
@@ -505,7 +508,7 @@ export default function AddressList() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="district">区县 *</Label>
+                <Label htmlFor="district">区县</Label>
                 <Input
                   id="district"
                   value={formData.district}
@@ -518,7 +521,7 @@ export default function AddressList() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="detail">详细地址 *</Label>
+              <Label htmlFor="detail">详细地址</Label>
               <Textarea
                 id="detail"
                 value={formData.detail}
@@ -545,7 +548,10 @@ export default function AddressList() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowAddressForm(false)}
+                onClick={() => {
+                  setShowAddressForm(false);
+                  setEditingAddress(null);
+                }}
                 disabled={submitting}
               >
                 取消
