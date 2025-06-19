@@ -1,9 +1,15 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, ShoppingBag, Star } from "lucide-react";
+import { Search, ShoppingBag, ShoppingCart, Star } from "lucide-react";
 import Image from "next/image";
-import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { addToCart, checkProductInCart } from "../actions";
 import { searchProducts } from "./actions";
 import { SearchSkeleton } from "./skeleton";
 
@@ -29,23 +35,65 @@ type Product = {
 };
 
 function ProductCard({ product }: { product: Product }) {
-  const images = JSON.parse(product.images || "[]");
-  const hasImage = images && images.length > 0;
-  const mainImage = hasImage ? images[0] : null;
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+  const [isCheckingCart, setIsCheckingCart] = useState(true);
+
+  useEffect(() => {
+    const checkCart = async () => {
+      try {
+        const inCart = await checkProductInCart(product.id);
+        setIsInCart(inCart);
+      } catch (error) {
+        console.error("检查购物车状态失败:", error);
+      } finally {
+        setIsCheckingCart(false);
+      }
+    };
+
+    checkCart();
+  }, [product.id]);
+
+  const getFirstImage = (images: string) => {
+    try {
+      const imageArray = JSON.parse(images);
+      if (Array.isArray(imageArray) && imageArray.length > 0) {
+        return imageArray[0];
+      }
+    } catch {
+      if (images && typeof images === "string" && images.trim()) {
+        return images;
+      }
+    }
+    return null;
+  };
+
+  const handleAddToCart = async () => {
+    setIsLoading(true);
+    try {
+      await addToCart(product.id, 1);
+      setIsInCart(true);
+      toast.success("商品已加入购物车");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "加入购物车失败");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 p-0 h-[420px] flex flex-col">
-      <div className="relative overflow-hidden">
-        {hasImage ? (
+    <Card className="group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 h-full flex flex-col p-0">
+      <div className="relative overflow-hidden aspect-square">
+        {getFirstImage(product.images) ? (
           <Image
-            src={mainImage}
+            src={getFirstImage(product.images)}
             alt={product.name}
-            width={300}
-            height={200}
-            className="w-full h-48 object-cover"
+            width={400}
+            height={400}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
         ) : (
-          <div className="w-full h-48 bg-muted flex items-center justify-center">
+          <div className="w-full h-full bg-muted flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
               <p className="text-sm">暂无图片</p>
@@ -60,12 +108,12 @@ function ProductCard({ product }: { product: Product }) {
         </h3>
 
         {product.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
             {product.description}
           </p>
         )}
 
-        <div className="mt-auto space-y-2">
+        <div className="space-y-2 mt-auto">
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold text-primary">
               ¥{product.price.toFixed(2)}
@@ -81,6 +129,14 @@ function ProductCard({ product }: { product: Product }) {
             <span>库存 {product.stock}</span>
           </div>
 
+          {product.category && (
+            <div className="flex items-center justify-between">
+              <Badge variant="secondary" className="text-xs">
+                {product.category}
+              </Badge>
+            </div>
+          )}
+
           <div className="text-sm text-muted-foreground">
             店铺: {product.seller.username}
           </div>
@@ -88,17 +144,64 @@ function ProductCard({ product }: { product: Product }) {
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full" size="sm">
-          <ShoppingBag className="w-4 h-4 mr-2" />
-          加入购物车
+        <Button
+          onClick={handleAddToCart}
+          disabled={
+            isLoading || product.stock === 0 || isInCart || isCheckingCart
+          }
+          className="w-full"
+          size="sm"
+          variant={isInCart ? "secondary" : "default"}
+        >
+          {isCheckingCart ? (
+            <>检查中...</>
+          ) : isLoading ? (
+            <>加入中...</>
+          ) : product.stock === 0 ? (
+            "缺货"
+          ) : isInCart ? (
+            <>
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              已加入购物车
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              加入购物车
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>
   );
 }
 
-async function SearchResults({ query }: { query: string }) {
-  const products = await searchProducts(query);
+function SearchResults({ query }: { query: string }) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setIsLoading(true);
+      try {
+        const data = await searchProducts(query);
+        setProducts(data);
+      } catch (error) {
+        console.error("搜索商品失败:", error);
+        toast.error("搜索商品失败");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (query) {
+      loadProducts();
+    }
+  }, [query]);
+
+  if (isLoading) {
+    return <SearchSkeleton />;
+  }
 
   if (products.length === 0) {
     return (
@@ -131,14 +234,24 @@ async function SearchResults({ query }: { query: string }) {
 }
 
 function SearchForm({ defaultValue }: { defaultValue?: string }) {
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState(defaultValue || "");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
-    <form action="/search" method="GET" className="w-full max-w-2xl mx-auto">
+    <form onSubmit={handleSubmit} className="w-full max-w-2xl mx-auto">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
         <Input
-          name="q"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="搜索您想要的商品..."
-          defaultValue={defaultValue}
           className="pl-10 pr-20 py-3 text-lg h-12 rounded-full border-2 focus:border-primary transition-colors"
           autoFocus={!defaultValue}
         />
@@ -154,13 +267,9 @@ function SearchForm({ defaultValue }: { defaultValue?: string }) {
   );
 }
 
-interface SearchPageProps {
-  searchParams: Promise<{ q?: string }>;
-}
-
-export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const resolvedSearchParams = await searchParams;
-  const query = resolvedSearchParams.q?.trim();
+export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q")?.trim();
 
   if (!query) {
     return (
@@ -178,14 +287,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <SearchForm defaultValue={query} />
       </div>
 
-      <Suspense fallback={<SearchSkeleton />}>
-        <SearchResults query={query} />
-      </Suspense>
+      <SearchResults query={query} />
     </div>
   );
 }

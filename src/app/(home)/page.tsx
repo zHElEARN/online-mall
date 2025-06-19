@@ -1,10 +1,18 @@
+"use client";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, ShoppingBag, Star } from "lucide-react";
+import { Search, ShoppingBag, ShoppingCart, Star } from "lucide-react";
 import Image from "next/image";
-import { Suspense } from "react";
-import { getRecommendedProducts } from "./actions";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  addToCart,
+  checkProductInCart,
+  getRecommendedProducts,
+} from "./actions";
 import { ProductRecommendationsSkeleton } from "./skeleton";
 
 type Product = {
@@ -29,23 +37,65 @@ type Product = {
 };
 
 function ProductCard({ product }: { product: Product }) {
-  const images = JSON.parse(product.images || "[]");
-  const hasImage = images && images.length > 0;
-  const mainImage = hasImage ? images[0] : null;
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInCart, setIsInCart] = useState(false);
+  const [isCheckingCart, setIsCheckingCart] = useState(true);
+
+  useEffect(() => {
+    const checkCart = async () => {
+      try {
+        const inCart = await checkProductInCart(product.id);
+        setIsInCart(inCart);
+      } catch (error) {
+        console.error("检查购物车状态失败:", error);
+      } finally {
+        setIsCheckingCart(false);
+      }
+    };
+
+    checkCart();
+  }, [product.id]);
+
+  const getFirstImage = (images: string) => {
+    try {
+      const imageArray = JSON.parse(images);
+      if (Array.isArray(imageArray) && imageArray.length > 0) {
+        return imageArray[0];
+      }
+    } catch {
+      if (images && typeof images === "string" && images.trim()) {
+        return images;
+      }
+    }
+    return null;
+  };
+
+  const handleAddToCart = async () => {
+    setIsLoading(true);
+    try {
+      await addToCart(product.id, 1);
+      setIsInCart(true);
+      toast.success("商品已加入购物车");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "加入购物车失败");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 p-0 h-[420px] flex flex-col">
-      <div className="relative overflow-hidden">
-        {hasImage ? (
+    <Card className="group overflow-hidden transition-all hover:shadow-lg hover:-translate-y-1 h-full flex flex-col p-0">
+      <div className="relative overflow-hidden aspect-square">
+        {getFirstImage(product.images) ? (
           <Image
-            src={mainImage}
+            src={getFirstImage(product.images)}
             alt={product.name}
-            width={300}
-            height={200}
-            className="w-full h-48 object-cover"
+            width={400}
+            height={400}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
         ) : (
-          <div className="w-full h-48 bg-muted flex items-center justify-center">
+          <div className="w-full h-full bg-muted flex items-center justify-center">
             <div className="text-center text-muted-foreground">
               <ShoppingBag className="w-12 h-12 mx-auto mb-2 text-muted-foreground/50" />
               <p className="text-sm">暂无图片</p>
@@ -60,12 +110,12 @@ function ProductCard({ product }: { product: Product }) {
         </h3>
 
         {product.description && (
-          <p className="text-sm text-muted-foreground mb-3 line-clamp-2 flex-1">
+          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
             {product.description}
           </p>
         )}
 
-        <div className="mt-auto space-y-2">
+        <div className="space-y-2 mt-auto">
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold text-primary">
               ¥{product.price.toFixed(2)}
@@ -81,6 +131,14 @@ function ProductCard({ product }: { product: Product }) {
             <span>库存 {product.stock}</span>
           </div>
 
+          {product.category && (
+            <div className="flex items-center justify-between">
+              <Badge variant="secondary" className="text-xs">
+                {product.category}
+              </Badge>
+            </div>
+          )}
+
           <div className="text-sm text-muted-foreground">
             店铺: {product.seller.username}
           </div>
@@ -88,17 +146,60 @@ function ProductCard({ product }: { product: Product }) {
       </CardContent>
 
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full" size="sm">
-          <ShoppingBag className="w-4 h-4 mr-2" />
-          加入购物车
+        <Button
+          onClick={handleAddToCart}
+          disabled={
+            isLoading || product.stock === 0 || isInCart || isCheckingCart
+          }
+          className="w-full"
+          size="sm"
+          variant={isInCart ? "secondary" : "default"}
+        >
+          {isCheckingCart ? (
+            <>检查中...</>
+          ) : isLoading ? (
+            <>加入中...</>
+          ) : product.stock === 0 ? (
+            "缺货"
+          ) : isInCart ? (
+            <>
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              已加入购物车
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              加入购物车
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>
   );
 }
 
-async function ProductRecommendations() {
-  const products = await getRecommendedProducts();
+function ProductRecommendations() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await getRecommendedProducts();
+        setProducts(data);
+      } catch (error) {
+        console.error("加载商品失败:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  if (isLoading) {
+    return <ProductRecommendationsSkeleton />;
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -160,9 +261,7 @@ export default function Home() {
           <Button variant="outline">查看更多</Button>
         </div>
 
-        <Suspense fallback={<ProductRecommendationsSkeleton />}>
-          <ProductRecommendations />
-        </Suspense>
+        <ProductRecommendations />
       </section>
     </main>
   );
